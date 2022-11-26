@@ -8,37 +8,53 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
 
 public class Request {
 
     private static final Logger LOG = LoggerFactory.getLogger(Request.class);
     private Socket client;
-    private Map<String, String> headers;
-    private Map<String, String> queryParams;
+    private Map<String, String> headers = new HashMap<>();
+    private Map<String, String> queryParams = new HashMap<>();
     private String path;
     private String verb;
-    private String fullUrl;
-    private String httpVersion;
+    private String version;
 
     public Request(Socket client) {
         this.client = client;
-        try {
-            parse();
-        } catch (IOException e) {
-            LOG.info("Can not parse the malformed request");
-        }
     }
 
-    private boolean parse() throws IOException {
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public Map<String, String> getQueryParams() {
+        return queryParams;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public Method getVerb() {
+        return Method.valueOf(verb);
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public boolean parse() throws IOException {
         InputStream inputStream = client.getInputStream();
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
 
         String initialLine = bufferedReader.readLine();
         StringTokenizer tokenizer = new StringTokenizer(initialLine);
-        LOG.info("Initial line of the request : " + initialLine);
+        LOG.debug("Initial line of the request : " + initialLine);
+
         //VERB PATH VERSION
         String[] components = new String[3];
         for (int i = 0; i < components.length; i++) {
@@ -50,10 +66,37 @@ public class Request {
             }
         }
 
-        //consume the header
-        while (true) {
-            String headerLine = bufferedReader.readLine();
-            LOG.info("Header line of the request : " + initialLine);
+        // consume headers, path, verb and http version
+        consumeHeaders(bufferedReader, initialLine);
+        consumePath(components);
+        verb = components[0];
+        version = components[2].substring(components[2].indexOf("/") + 1);
+
+        LOG.info("Request info: " + this);
+        return true;
+    }
+
+    private boolean consumePath(String[] components) {
+        String originalPath = components[1];
+        int indexOfQueryCharacter = originalPath.indexOf("?");
+
+        // does it contains any request query param ?
+        if (indexOfQueryCharacter == -1) {
+            path = originalPath;
+        } else {
+            path = originalPath.substring(0, indexOfQueryCharacter);
+            parseQueryParameters(originalPath.substring(indexOfQueryCharacter + 1));
+        }
+        if ("/".equals(path)) {
+            path = "/index.html";
+        }
+        return path != null && path.isEmpty() == false;
+    }
+
+    private boolean consumeHeaders(BufferedReader bufferedReader, String initialLine) throws IOException {
+        String headerLine;
+        while ((headerLine = bufferedReader.readLine()) != null) {
+            LOG.debug("One header line of the request : " + headerLine);
             if (headerLine.length() == 0) {
                 break;
             }
@@ -64,28 +107,6 @@ public class Request {
             headers.put(headerLine.substring(0, separator),
                     headerLine.substring(separator + 1));
         }
-
-        //consume path
-        fullUrl = components[1];
-        int indexOfQueryCharacter = fullUrl.indexOf("?");
-
-        // does it contains any request query param ?
-        if (indexOfQueryCharacter == -1) {
-            path = fullUrl;
-        } else {
-            path = fullUrl.substring(0, indexOfQueryCharacter);
-            parseQueryParameters(fullUrl.substring(indexOfQueryCharacter + 1));
-        }
-        if ("/".equals(path)) {
-            path = "/index.html";
-        }
-
-        // consume verb and http version
-        verb = components[0];
-        httpVersion = components[2].substring(components[2].indexOf("/"));
-        bufferedReader.close();
-
-        LOG.info("Request info: " + this);
         return true;
     }
 
@@ -109,8 +130,7 @@ public class Request {
                 ", queryParams=" + queryParams +
                 ", path='" + path + '\'' +
                 ", verb='" + verb + '\'' +
-                ", fullUrl='" + fullUrl + '\'' +
-                ", httpVersion='" + httpVersion + '\'' +
+                ", version='" + version + '\'' +
                 '}';
     }
 }

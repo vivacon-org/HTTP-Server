@@ -1,5 +1,7 @@
 package org.hungdoan.simple_http_server;
 
+import org.hungdoan.simple_http_server.exception.MethodHandlerNotFound;
+import org.hungdoan.simple_http_server.exception.PathHandlerNotFound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +17,7 @@ public class HttpServer {
     private static final int DEFAULT_PORT = 8080;
     private static final Logger LOG = LoggerFactory.getLogger(HttpServer.class);
     private int port;
-    private Map<String, Map<Method, Handler>> pathHandlers;
+    private static Map<String, Map<Method, Handler>> pathHandlers = new HashMap<>();
 
     public HttpServer(int port) {
         this.port = port;
@@ -38,8 +40,12 @@ public class HttpServer {
     public void start() throws IOException {
 
         ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket(port);
+        StaticFileHandler staticFileHandler = new StaticFileHandler();
+        addHandler("/index.html", Method.GET, staticFileHandler);
+        addHandler("/", Method.GET, staticFileHandler);
+
         Socket client;
-        while((client = serverSocket.accept()) != null ){
+        while ((client = serverSocket.accept()) != null) {
             LOG.info("Receiving and starting the handle the request");
             SocketHandler socketHandler = new SocketHandler(client);
             Thread thread = new Thread(socketHandler);
@@ -48,12 +54,24 @@ public class HttpServer {
         }
     }
 
-    public void addHandler(String method, String path, Handler handler) {
+    private static void addHandler(String path, Method method, Handler handler) {
         Map<Method, Handler> methodHandlers = pathHandlers.get(path);
         if (methodHandlers == null) {
             methodHandlers = new HashMap<>();
-            methodHandlers.put(Method.valueOf(method), handler);
+            methodHandlers.put(method, handler);
         }
         pathHandlers.put(path, methodHandlers);
+    }
+
+    public static Handler getHandler(String path, Method method) throws PathHandlerNotFound, MethodHandlerNotFound {
+        Map<Method, Handler> methodHandlerMap = pathHandlers.get(path);
+        if (methodHandlerMap == null) {
+            throw new PathHandlerNotFound();
+        }
+        Handler methodHandler = methodHandlerMap.get(method);
+        if (methodHandler == null) {
+            throw new MethodHandlerNotFound();
+        }
+        return methodHandler;
     }
 }
