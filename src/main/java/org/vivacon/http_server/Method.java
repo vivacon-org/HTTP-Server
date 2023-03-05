@@ -1,4 +1,4 @@
-package org.hungdoan.simple_http_server;
+package org.vivacon.http_server;
 
 public enum Method {
 
@@ -10,7 +10,7 @@ public enum Method {
         this.rawName = rawName;
     }
 
-    public Method get(String name){
+    public Method get(String name) {
         String lowerCaseName = name.strip().toLowerCase();
         return Method.valueOf(lowerCaseName);
     }

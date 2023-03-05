@@ -1,12 +1,10 @@
-package org.hungdoan.simple_http_server;
+package org.vivacon.http_server;
 
-import org.hungdoan.simple_http_server.exception.MethodHandlerNotFound;
-import org.hungdoan.simple_http_server.exception.PathHandlerNotFound;
-import org.hungdoan.simple_http_server.exception.StaticResourceNotFound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.Socket;
 
 public class SocketHandler implements Runnable {
@@ -28,14 +26,21 @@ public class SocketHandler implements Runnable {
                 response.respond(400, "Bad request");
                 return;
             }
-            Handler handler = HttpServer.getHandler(request.getPath(), request.getVerb());
-            Object finalResult = handler.handle(request, response);
-            response.setBody(finalResult.toString());
+//            Handler handler = HttpServer.getHandler(request.getPath(), request.getVerb());
+//            Object finalResult = handler.handle(request, response);
+
+            Method endpointHandler = HttpServer.engine.getEndpointHandler(request.getPath());
+            Object controller = HttpServer.engine.getController(request.getPath());
+            Object result = endpointHandler.invoke(controller);
+
+            response.setBody(result.toString());
+            response.setResponseCode(200, "OK");
+            response.setHeader("Content-Type", "text/html; charset=UTF-8");
             response.send();
-        } catch (PathHandlerNotFound | StaticResourceNotFound e) {
-            response.respond(404, "The resource is not found");
-        } catch (MethodHandlerNotFound e) {
-            response.respond(403, "Method is not supported");
+//        } catch (PathHandlerNotFound | StaticResourceNotFound e) {
+//            response.respond(404, "The resource is not found");
+//        } catch (MethodHandlerNotFound e) {
+//            response.respond(403, "Method is not supported");
         } catch (Exception e) {
             response.respond(500, "Internal server error");
         } finally {

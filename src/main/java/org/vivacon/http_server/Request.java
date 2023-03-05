@@ -1,4 +1,4 @@
-package org.hungdoan.simple_http_server;
+package org.vivacon.http_server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +22,11 @@ public class Request {
     private String path;
     private String verb;
     private String version;
+
+    public InputStream getBody() throws IOException {
+        //return new HttpInputStream(null, headers);
+        return null;
+    }
 
     public Request(Socket client) {
         this.client = client;

@@ -1,8 +1,8 @@
-package org.hungdoan.simple_http_server;
+package org.vivacon.http_server;
 
-import org.hungdoan.simple_http_server.exception.StaticResourceNotFound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vivacon.http_server.exception.StaticResourceNotFound;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;

@@ -1,9 +1,10 @@
-package org.hungdoan.simple_http_server;
+package org.vivacon.http_server;
 
-import org.hungdoan.simple_http_server.exception.MethodHandlerNotFound;
-import org.hungdoan.simple_http_server.exception.PathHandlerNotFound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vivacon.framework.Engine;
+import org.vivacon.http_server.exception.MethodHandlerNotFound;
+import org.vivacon.http_server.exception.PathHandlerNotFound;
 
 import javax.net.ServerSocketFactory;
 import java.io.IOException;
@@ -19,6 +20,8 @@ public class HttpServer {
     private int port;
     private static Map<String, Map<Method, Handler>> pathHandlers = new HashMap<>();
 
+    public static Engine engine;
+
     public HttpServer(int port) {
         this.port = port;
     }
@@ -28,6 +31,7 @@ public class HttpServer {
     }
 
     public static void main(String[] args) {
+        engine = new Engine();
         HttpServer server = new HttpServer();
         try {
             LOG.info("Start the http server at port " + server.port);
@@ -38,7 +42,6 @@ public class HttpServer {
     }
 
     public void start() throws IOException {
-
         ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket(port);
         StaticFileHandler staticFileHandler = new StaticFileHandler();
         addHandler("/index.html", Method.GET, staticFileHandler);

@@ -1,4 +1,4 @@
-package org.hungdoan.simple_http_server;
+package org.vivacon.http_server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

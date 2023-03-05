@@ -1,4 +1,4 @@
-package org.hungdoan.simple_http_server;
+package org.vivacon.http_server;
 
 public interface Handler {
 
