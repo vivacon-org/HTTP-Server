@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-public class Engine {
+public class SimpleIoCContainer {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private Collection<String> classNames;
@@ -21,7 +21,7 @@ public class Engine {
     private Map<String, Method> endpointToMethod;
     private Map<String, Object> endpointToController;
 
-    public Engine() {
+    public SimpleIoCContainer() {
         classNames = new LinkedList<>();
         iocContainer = new HashMap<>();
         endpointToMethod = new HashMap<>();
@@ -39,13 +39,13 @@ public class Engine {
 
     public void init() {
         logger.info("Do scanning");
-        doScanning("org.hungdoan");
+        doScanning("org.vivacon.demo");
         logger.info("Do instance");
-        doInstance();
+        doInitializeInstances();
         logger.info("Do inject");
-        doInject();
+        doInjectDependencies();
         logger.info("Do mapping");
-        doMapping();
+        doMappingPaths();
         logger.info("Initiation is completed");
     }
 
@@ -65,7 +65,7 @@ public class Engine {
         }
     }
 
-    private void doInstance() {
+    private void doInitializeInstances() {
         for (String className : classNames) {
             try {
                 Class<?> clazz = Class.forName(className);
@@ -86,7 +86,7 @@ public class Engine {
         }
     }
 
-    private void doInject() {
+    private void doInjectDependencies() {
 
         for (Map.Entry<String, Object> bean : iocContainer.entrySet()) {
             Field[] declaredFields = bean.getValue().getClass().getDeclaredFields();
@@ -105,7 +105,7 @@ public class Engine {
         }
     }
 
-    private void doMapping() {
+    private void doMappingPaths() {
 
         for (Map.Entry<String, Object> bean : iocContainer.entrySet()) {
 

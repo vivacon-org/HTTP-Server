@@ -7,12 +7,12 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.Socket;
 
-public class SocketHandler implements Runnable {
+public class SimpleDispatcher implements Runnable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SocketHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleDispatcher.class);
     private Socket client;
 
-    public SocketHandler(Socket client) {
+    public SimpleDispatcher(Socket client) {
         this.client = client;
     }
 
@@ -29,8 +29,8 @@ public class SocketHandler implements Runnable {
 //            Handler handler = HttpServer.getHandler(request.getPath(), request.getVerb());
 //            Object finalResult = handler.handle(request, response);
 
-            Method endpointHandler = HttpServer.engine.getEndpointHandler(request.getPath());
-            Object controller = HttpServer.engine.getController(request.getPath());
+            Method endpointHandler = HttpServer.simpleIoCContainer.getEndpointHandler(request.getPath());
+            Object controller = HttpServer.simpleIoCContainer.getController(request.getPath());
             Object result = endpointHandler.invoke(controller);
 
             response.setBody(result.toString());

@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Response {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SocketHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleDispatcher.class);
 
     private OutputStreamWriter writer;
 

@@ -2,7 +2,7 @@ package org.vivacon.http_server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vivacon.framework.Engine;
+import org.vivacon.framework.SimpleIoCContainer;
 import org.vivacon.http_server.exception.MethodHandlerNotFound;
 import org.vivacon.http_server.exception.PathHandlerNotFound;
 
@@ -20,7 +20,7 @@ public class HttpServer {
     private int port;
     private static Map<String, Map<Method, Handler>> pathHandlers = new HashMap<>();
 
-    public static Engine engine;
+    public static SimpleIoCContainer simpleIoCContainer;
 
     public HttpServer(int port) {
         this.port = port;
@@ -31,7 +31,7 @@ public class HttpServer {
     }
 
     public static void main(String[] args) {
-        engine = new Engine();
+        simpleIoCContainer = new SimpleIoCContainer();
         HttpServer server = new HttpServer();
         try {
             LOG.info("Start the http server at port " + server.port);
@@ -50,8 +50,8 @@ public class HttpServer {
         Socket client;
         while ((client = serverSocket.accept()) != null) {
             LOG.info("Receiving and starting the handle the request");
-            SocketHandler socketHandler = new SocketHandler(client);
-            Thread thread = new Thread(socketHandler);
+            SimpleDispatcher simpleDispatcher = new SimpleDispatcher(client);
+            Thread thread = new Thread(simpleDispatcher);
             thread.start();
             LOG.info("Waiting for the next incoming request");
         }
