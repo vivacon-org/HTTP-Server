@@ -16,11 +16,17 @@ import java.util.StringTokenizer;
 public class Request {
 
     private static final Logger LOG = LoggerFactory.getLogger(Request.class);
+
     private Socket client;
+
     private Map<String, String> headers = new HashMap<>();
+
     private Map<String, String> queryParams = new HashMap<>();
+
     private String path;
+
     private String verb;
+
     private String version;
 
     public InputStream getBody() throws IOException {
@@ -33,27 +39,27 @@ public class Request {
     }
 
     public Map<String, String> getHeaders() {
-        return headers;
+        return this.headers;
     }
 
     public Map<String, String> getQueryParams() {
-        return queryParams;
+        return this.queryParams;
     }
 
     public String getPath() {
-        return path;
+        return this.path;
     }
 
     public Method getVerb() {
-        return Method.valueOf(verb);
+        return Method.valueOf(this.verb);
     }
 
     public String getVersion() {
-        return version;
+        return this.version;
     }
 
     public boolean parse() throws IOException {
-        InputStream inputStream = client.getInputStream();
+        InputStream inputStream = this.client.getInputStream();
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
 
         String initialLine = bufferedReader.readLine();
@@ -72,10 +78,10 @@ public class Request {
         }
 
         // consume headers, path, verb and http version
-        consumeHeaders(bufferedReader, initialLine);
-        consumePath(components);
-        verb = components[0];
-        version = components[2].substring(components[2].indexOf("/") + 1);
+        this.consumeHeaders(bufferedReader, initialLine);
+        this.consumePath(components);
+        this.verb = components[0];
+        this.version = components[2].substring(components[2].indexOf("/") + 1);
 
         LOG.info("Request info: " + this);
         return true;
@@ -87,29 +93,29 @@ public class Request {
 
         // does it contains any request query param ?
         if (indexOfQueryCharacter == -1) {
-            path = originalPath;
+            this.path = originalPath;
         } else {
-            path = originalPath.substring(0, indexOfQueryCharacter);
-            parseQueryParameters(originalPath.substring(indexOfQueryCharacter + 1));
+            this.path = originalPath.substring(0, indexOfQueryCharacter);
+            this.parseQueryParameters(originalPath.substring(indexOfQueryCharacter + 1));
         }
-        if ("/".equals(path)) {
-            path = "/index.html";
+        if ("/".equalsIgnoreCase(this.path)) {
+            this.path = "/index.html";
         }
-        return path != null && path.isEmpty() == false;
+        return this.path != null && !this.path.isEmpty();
     }
 
     private boolean consumeHeaders(BufferedReader bufferedReader, String initialLine) throws IOException {
         String headerLine;
         while ((headerLine = bufferedReader.readLine()) != null) {
             LOG.debug("One header line of the request : " + headerLine);
-            if (headerLine.length() == 0) {
+            if (headerLine.isEmpty()) {
                 break;
             }
             int separator = headerLine.indexOf(":");
             if (separator == -1) {
                 return false;
             }
-            headers.put(headerLine.substring(0, separator),
+            this.headers.put(headerLine.substring(0, separator),
                     headerLine.substring(separator + 1));
         }
         return true;
@@ -119,10 +125,10 @@ public class Request {
         for (String parameter : queryString.split("&")) {
             int separator = parameter.indexOf('=');
             if (separator > -1) {
-                queryParams.put(parameter.substring(0, separator),
+                this.queryParams.put(parameter.substring(0, separator),
                         parameter.substring(separator + 1));
             } else {
-                queryParams.put(parameter, null);
+                this.queryParams.put(parameter, null);
             }
         }
     }
@@ -138,4 +144,5 @@ public class Request {
                 ", version='" + version + '\'' +
                 '}';
     }
+
 }

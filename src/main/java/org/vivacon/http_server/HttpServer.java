@@ -15,9 +15,12 @@ import java.util.Map;
 
 public class HttpServer {
 
-    private static final int DEFAULT_PORT = 8080;
+    private static final int DEFAULT_PORT = 8090;
+
     private static final Logger LOG = LoggerFactory.getLogger(HttpServer.class);
+
     private int port;
+
     private static Map<String, Map<Method, Handler>> pathHandlers = new HashMap<>();
 
     public static SimpleIoCContainer simpleIoCContainer;
@@ -37,23 +40,24 @@ public class HttpServer {
             LOG.info("Start the http server at port " + server.port);
             server.start();
         } catch (IOException e) {
-            System.out.println("Something went wrong with the process of operating the http server");
+            LOG.info("Something went wrong with the process of operating the http server");
         }
     }
 
     public void start() throws IOException {
-        ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket(port);
-        StaticFileHandler staticFileHandler = new StaticFileHandler();
-        addHandler("/index.html", Method.GET, staticFileHandler);
-        addHandler("/", Method.GET, staticFileHandler);
+        try (ServerSocket serverSocket = ServerSocketFactory.getDefault().createServerSocket(port)) {
+            StaticFileHandler staticFileHandler = new StaticFileHandler();
+            addHandler("/index.html", Method.GET, staticFileHandler);
+            addHandler("/", Method.GET, staticFileHandler);
 
-        Socket client;
-        while ((client = serverSocket.accept()) != null) {
-            LOG.info("Receiving and starting the handle the request");
-            SimpleDispatcher simpleDispatcher = new SimpleDispatcher(client);
-            Thread thread = new Thread(simpleDispatcher);
-            thread.start();
-            LOG.info("Waiting for the next incoming request");
+            Socket client;
+            while ((client = serverSocket.accept()) != null) {
+                LOG.info("Receiving and starting the handle the request");
+                SimpleDispatcher simpleDispatcher = new SimpleDispatcher(client);
+                Thread thread = new Thread(simpleDispatcher);
+                thread.start();
+                LOG.info("Waiting for the next incoming request");
+            }
         }
     }
 
@@ -77,4 +81,5 @@ public class HttpServer {
         }
         return methodHandler;
     }
+
 }

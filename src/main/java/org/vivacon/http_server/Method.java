@@ -14,4 +14,5 @@ public enum Method {
         String lowerCaseName = name.strip().toLowerCase();
         return Method.valueOf(lowerCaseName);
     }
+
 }

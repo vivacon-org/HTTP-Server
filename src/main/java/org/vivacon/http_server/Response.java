@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Response {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleDispatcher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Response.class);
 
     private OutputStreamWriter writer;
 
@@ -33,7 +33,7 @@ public class Response {
     }
 
     public void setBody(String body) {
-        headers.put("Content-Length", Integer.toString(body.length()));
+        this.headers.put("Content-Length", Integer.toString(body.length()));
         this.body = body;
     }
 
@@ -44,8 +44,8 @@ public class Response {
     public void respond(int statusCode, String msg) {
         try {
             String responseLine = "HTTP/1.1 " + statusCode + " " + msg + "\r\n\r\n";
-            writer.write(responseLine);
-            writer.flush();
+            this.writer.write(responseLine);
+            this.writer.flush();
             LOG.info(responseLine);
         } catch (IOException e) {
             LOG.error("Unable to write response back to client");
@@ -54,19 +54,22 @@ public class Response {
 
     public void send() {
         try {
-            headers.put("Connection", "Close");
+            this.headers.put("Connection", "Close");
             StringBuilder builder = new StringBuilder();
-            builder.append("HTTP/1.1 " + statusCode + " " + statusMessage + "\r\n");
+            //builder.append("HTTP/1.1 " + statusCode + " " + statusMessage + "\r\n");
+            builder.append("HTTP/1.1 ").append(statusCode).append(" ").append(statusMessage).append("\r\n");
+
             for (String headerName : headers.keySet()) {
-                builder.append(headerName + ": " + headers.get(headerName) + "\r\n");
+                //builder.append(headerName + ": " + headers.get(headerName) + "\r\n");
+                builder.append(headerName).append(": ").append(this.headers.get(headerName)).append("\r\n");
             }
-            if (body != null) {
+            if (this.body != null) {
                 builder.append("\r\n");
-                builder.append(body);
+                builder.append(this.body);
             }
             String finalResponse = builder.toString();
-            writer.write(finalResponse);
-            writer.flush();
+            this.writer.write(finalResponse);
+            this.writer.flush();
             LOG.info(finalResponse);
         } catch (IOException e) {
             LOG.error("Unable to write response back to client");
@@ -82,4 +85,5 @@ public class Response {
                 ", body='" + body + '\'' +
                 '}';
     }
+
 }

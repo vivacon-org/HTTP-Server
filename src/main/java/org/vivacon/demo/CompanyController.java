@@ -18,4 +18,5 @@ public class CompanyController {
     public String getAllEmployee() {
         return this.broadcastService.echo("Employee");
     }
+
 }

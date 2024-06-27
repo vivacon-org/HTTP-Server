@@ -8,59 +8,64 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 public class SimpleIoCContainer {
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleIoCContainer.class);
+
     private Collection<String> classNames;
+
     private Map<String, Object> iocContainer;
+
     private Map<String, Method> endpointToMethod;
+
     private Map<String, Object> endpointToController;
 
     public SimpleIoCContainer() {
-        classNames = new LinkedList<>();
-        iocContainer = new HashMap<>();
-        endpointToMethod = new HashMap<>();
-        endpointToController = new HashMap<>();
-        init();
+        this.classNames = new LinkedList<>();
+        this.iocContainer = new HashMap<>();
+        this.endpointToMethod = new HashMap<>();
+        this.endpointToController = new HashMap<>();
+        this.init();
     }
 
     public Method getEndpointHandler(String path) {
-        return endpointToMethod.get(path);
+        return this.endpointToMethod.get(path);
     }
 
     public Object getController(String path) {
-        return endpointToController.get(path);
+        return this.endpointToController.get(path);
     }
 
     public void init() {
-        logger.info("Do scanning");
-        doScanning("org.vivacon.demo");
-        logger.info("Do instance");
-        doInitializeInstances();
-        logger.info("Do inject");
-        doInjectDependencies();
-        logger.info("Do mapping");
-        doMappingPaths();
-        logger.info("Initiation is completed");
+        LOGGER.info("Do scanning");
+        this.doScanning("org.vivacon.demo");
+        LOGGER.info("Do instance");
+        this.doInitializeInstances();
+        LOGGER.info("Do inject");
+        this.doInjectDependencies();
+        LOGGER.info("Do mapping");
+        this.doMappingPaths();
+        LOGGER.info("Initiation is completed");
     }
 
     private void doScanning(String packageName) {
         URL resource = this.getClass().getClassLoader().getResource(packageName.replaceAll("\\.", "/"));
-        File dir = new File(resource.getFile());
-        for (File file : dir.listFiles()) {
-            if (file.isDirectory()) {
-
-                logger.info("Scan in package " + packageName + "." + file.getName());
-                doScanning(packageName + "." + file.getName());
-            } else {
-                String className = packageName + "." + file.getName().replaceAll("\\.class", "");
-                classNames.add(className);
-                logger.info("Get class " + packageName + "." + file.getName());
+        File dir = null;
+        if (resource != null) {
+            dir = new File(resource.getFile());
+        }
+        if (dir != null) {
+            for (File file : Objects.requireNonNull(dir.listFiles())) {
+                if (file.isDirectory()) {
+                    LOGGER.info("Scan in package " + packageName + "." + file.getName());
+                    doScanning(packageName + "." + file.getName());
+                } else {
+                    String className = packageName + "." + file.getName().replaceAll("\\.class", "");
+                    classNames.add(className);
+                    LOGGER.info("Get class " + packageName + "." + file.getName());
+                }
             }
         }
     }
@@ -70,32 +75,23 @@ public class SimpleIoCContainer {
             try {
                 Class<?> clazz = Class.forName(className);
                 if (clazz.isAnnotationPresent(Component.class) || clazz.isAnnotationPresent(Controller.class) || clazz.isAnnotationPresent(Service.class)) {
-                    iocContainer.put(className.toUpperCase(), clazz.getDeclaredConstructor().newInstance());
+                    this.iocContainer.put(className.toUpperCase(), clazz.getDeclaredConstructor().newInstance());
                 }
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            } catch (InvocationTargetException e) {
-                throw new RuntimeException(e);
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            } catch (InstantiationException e) {
-                throw new RuntimeException(e);
-            } catch (IllegalAccessException e) {
+            } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException |
+                     InstantiationException | IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
     private void doInjectDependencies() {
-
-        for (Map.Entry<String, Object> bean : iocContainer.entrySet()) {
+        for (Map.Entry<String, Object> bean : this.iocContainer.entrySet()) {
             Field[] declaredFields = bean.getValue().getClass().getDeclaredFields();
 
             for (Field field : declaredFields) {
-
                 String beanName = field.getType().getName().toUpperCase();
                 field.setAccessible(true);
-                Object requestedBean = iocContainer.get(beanName);
+                Object requestedBean = this.iocContainer.get(beanName);
                 try {
                     field.set(bean.getValue(), requestedBean);
                 } catch (IllegalAccessException e) {
@@ -106,13 +102,10 @@ public class SimpleIoCContainer {
     }
 
     private void doMappingPaths() {
-
-        for (Map.Entry<String, Object> bean : iocContainer.entrySet()) {
-
-            Class<? extends Object> clazz = bean.getValue().getClass();
+        for (Map.Entry<String, Object> bean : this.iocContainer.entrySet()) {
+            Class<?> clazz = bean.getValue().getClass();
 
             if (clazz.isAnnotationPresent(Controller.class)) {
-
                 String basePath = "";
                 if (clazz.isAnnotationPresent(RequestMapping.class)) {
                     RequestMapping classRequestMetaData = clazz.getAnnotation(RequestMapping.class);
@@ -121,15 +114,15 @@ public class SimpleIoCContainer {
 
                 Method[] methods = clazz.getMethods();
                 for (Method method : methods) {
-
                     if (method.isAnnotationPresent(RequestMapping.class)) {
                         RequestMapping methodRequestMetaData = method.getAnnotation(RequestMapping.class);
                         String fullPath = basePath + methodRequestMetaData.path();
-                        endpointToMethod.put(fullPath, method);
-                        endpointToController.put(fullPath, bean.getValue());
+                        this.endpointToMethod.put(fullPath, method);
+                        this.endpointToController.put(fullPath, bean.getValue());
                     }
                 }
             }
         }
     }
+
 }

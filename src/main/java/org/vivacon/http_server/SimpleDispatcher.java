@@ -10,6 +10,7 @@ import java.net.Socket;
 public class SimpleDispatcher implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleDispatcher.class);
+
     private Socket client;
 
     public SimpleDispatcher(Socket client) {
@@ -20,14 +21,14 @@ public class SimpleDispatcher implements Runnable {
     public void run() {
         Response response = null;
         try {
-            Request request = new Request(client);
-            response = new Response(client);
-            if (request.parse() == false) {
+            Request request = new Request(this.client);
+            response = new Response(this.client);
+            if (!request.parse()) {
                 response.respond(400, "Bad request");
                 return;
             }
-//            Handler handler = HttpServer.getHandler(request.getPath(), request.getVerb());
-//            Object finalResult = handler.handle(request, response);
+            //Handler handler = HttpServer.getHandler(request.getPath(), request.getVerb());
+            //Object result = handler.handle(request, response);
 
             Method endpointHandler = HttpServer.simpleIoCContainer.getEndpointHandler(request.getPath());
             Object controller = HttpServer.simpleIoCContainer.getController(request.getPath());
@@ -42,13 +43,16 @@ public class SimpleDispatcher implements Runnable {
 //        } catch (MethodHandlerNotFound e) {
 //            response.respond(403, "Method is not supported");
         } catch (Exception e) {
-            response.respond(500, "Internal server error");
+            if (response != null) {
+                response.respond(500, "Internal server error");
+            }
         } finally {
             try {
-                client.close();
+                this.client.close();
             } catch (IOException e) {
                 LOG.error("Can not close the connection to client");
             }
         }
     }
+
 }
