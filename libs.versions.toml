@@ -1,0 +1,37 @@
+[versions]
+junit = "5.9.1"
+slf4j = "2.0.13"
+logback = "1.5.6"
+
+[libraries]
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+
+[bundles]
+
+serverCompile = [
+    "slf4j",
+    "logback",
+]
+
+serverTest = [
+    "junit-bom",
+    "junit-jupiter",
+]
+
+serverRuntime = [
+    "slf4j",
+    "logback",
+]
+
+frameworkCompile = [
+    "slf4j",
+    "logback",
+]
+
+frameworkRuntime = [
+    "slf4j",
+    "logback",
+]
