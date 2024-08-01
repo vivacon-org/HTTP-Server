@@ -4,91 +4,81 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Parameter;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 public class BeanFactory {
-    
     private static final Logger LOG = LoggerFactory.getLogger(BeanFactory.class);
 
-    private static volatile BeanFactory instance;
+    private static final BeanFactory INSTANCE = new BeanFactory();
 
     private BeanFactory() {
         // Private constructor to prevent instantiation
     }
 
     public static BeanFactory getInstance() {
-        if (instance == null) {
-            synchronized (BeanFactory.class) {
-                if (instance == null) {
-                    instance = new BeanFactory();
-                }
-            }
-        }
-        return instance;
+        return INSTANCE;
     }
 
-    public Object createBean(Class<?> beanClazz, Map<String, Set<Object>> existingBeans) {
+    public Object createBean(BeanDefinition beanDefinition,
+                             Map<Class<?>, Object> clazzToBean,
+                             Map<String, Set<Object>> bindNameToBeans) {
+
+        if (clazzToBean.get(beanDefinition.getBeanClass()) != null) {
+            return clazzToBean.get(beanDefinition.getBeanClass());
+        }
+
+        Constructor<?> injectedConstructor = beanDefinition.getInjectedConstructor();
+
         try {
-            List<String> bindingNames = getBeanBindingName(beanClazz);
-
-            for (String bindingName : bindingNames) {
-                Set<Object> beans = existingBeans.get(bindingName);
-                return beans.iterator().next();
+            if (injectedConstructor.getParameterCount() > 0) {
+                Object[] dependencies = populateDependencies(beanDefinition.getDependenciesToBindingNames(), bindNameToBeans);
+                return injectedConstructor.newInstance(dependencies);
             }
 
-            Constructor<?> constructorToInject = getConstructorToInject(beanClazz);
 
-            LinkedHashMap<Parameter, List<String>> dependencyToItsBindNames = getDependencyToItsBindNames(constructorToInject);
+            Object bean = injectedConstructor.newInstance();
+            Object[] dependencies = populateDependencies(beanDefinition.getDependenciesToBindingNames(), bindNameToBeans);
+            Field[] declaredFields = beanDefinition.getBeanClass().getDeclaredFields();
 
-            Object[] dependencies = populateDependencies(dependencyToItsBindNames, existingBeans);
+            int runner = 0;
+            for (Field field : declaredFields) {
 
-            return constructorToInject.newInstance(dependencies);
+                String beanName = field.getName();
+                Object injectedDependency = dependencies[runner];
 
-        } catch (InstantiationException | IllegalAccessException |
-                 InvocationTargetException e) {
-            throw new RuntimeException("Failed to create bean: " + beanClazz.getName(), e);
+                field.setAccessible(true);
+                field.set(bean, injectedDependency);
+                runner++;
+            }
+
+            return bean;
+
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(String.format("Can not create bean for %s", beanDefinition), e);
         }
     }
 
-    private Object[] populateDependencies(LinkedHashMap<Parameter, List<String>> dependencyToItsBindNames,
-                                          Map<String, Set<Object>> existingBeans) {
+    private Object[] populateDependencies(LinkedHashMap<Class<?>, Set<String>> dependencyToItsBindNames,
+                                          Map<String, Set<Object>> bindNameToBeans) {
 
         Object[] dependencies = new Object[dependencyToItsBindNames.size()];
 
         int runner = 0;
 
-        for (Map.Entry<Parameter, List<String>> entry : dependencyToItsBindNames.entrySet()) {
+        for (Map.Entry<Class<?>, Set<String>> entry : dependencyToItsBindNames.entrySet()) {
 
-            Parameter parameter = entry.getKey();
-            Qualifier qualifier = parameter.getAnnotation(Qualifier.class);
+            Set<String> dependencyBindingNames = entry.getValue();
 
-            if (qualifier != null) {
+            Optional<Object> bean = findBeansViaBindingNames(dependencyBindingNames, bindNameToBeans);
 
-                Set<Object> beans = existingBeans.get(qualifier.name());
+            if (bean.isPresent()) {
 
-                if (beans.isEmpty()) {
-                    throw new IllegalArgumentException("Can not find the suitable bean for the binding name, please check the bean registration");
-                }
-
-                if (beans.size() == 1) {
-                    dependencies[runner++] = beans.iterator().next();
-                    continue;
-                }
-
-                throw new IllegalArgumentException("Can not find the suitable bean for the binding name, please check the bean registration");
-            }
-
-
-            List<String> lowPriorityBindingNames = entry.getValue();
-            Optional<Object> beanViaLowPriorityBindingName = findBeansViaBindingName(lowPriorityBindingNames, existingBeans);
-            if (beanViaLowPriorityBindingName.isPresent()) {
-                dependencies[runner++] = beanViaLowPriorityBindingName.get();
+                dependencies[runner++] = bean.get();
                 continue;
             }
 
@@ -98,11 +88,12 @@ public class BeanFactory {
         return dependencies;
     }
 
-    private Optional<Object> findBeansViaBindingName(List<String> bindingNames, Map<String, Set<Object>> existingBeans) {
+    private Optional<Object> findBeansViaBindingNames(Set<String> bindingNames,
+                                                      Map<String, Set<Object>> bindNameToBeans) {
 
         for (String bindingName : bindingNames) {
 
-            Set<Object> beans = existingBeans.get(bindingName);
+            Set<Object> beans = bindNameToBeans.get(bindingName);
 
             if (beans.isEmpty()) {
                 return Optional.empty();

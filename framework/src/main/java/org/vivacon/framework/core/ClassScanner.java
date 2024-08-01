@@ -37,6 +37,10 @@ public class ClassScanner {
 
         for (Class<?> clazz : allClassesInClassPath) {
 
+            if (clazz.isInterface()) {
+                continue;
+            }
+
             Annotation[] annotationsOfClazz = clazz.getAnnotations();
 
             for (Annotation annotationClazz : annotationsOfClazz) {

@@ -1,9 +1,6 @@
 package org.vivacon.framework.bean;
 
 import org.vivacon.framework.core.ClassScanner;
-import org.vivacon.framework.web.Component;
-import org.vivacon.framework.web.Controller;
-import org.vivacon.framework.web.Service;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -19,26 +16,45 @@ import java.util.Queue;
 import java.util.Set;
 
 public class IoCContainer {
-    private final Map<Class<?>, Object> beans;
+    private final Map<Class<?>, Object> clazzToBean;
+    private final Map<String, Set<Object>> bindNameToBeans;
 
     public IoCContainer(ClassScanner classScanner,
-                        BeanFactory beanFactory) {
-        beans = new HashMap<>();
-
-        Set<Class<? extends Annotation>> managedAnnotations = new HashSet<>();
-        managedAnnotations.add(Component.class);
-        managedAnnotations.add(Service.class);
-        managedAnnotations.add(Controller.class);
+                        MetadataExtractor metadataExtractor,
+                        BeanFactory beanFactory,
+                        Set<Class<? extends Annotation>> managedAnnotations) {
+        clazzToBean = new HashMap<>();
+        bindNameToBeans = new HashMap<>();
 
         List<Class<?>> componentClasses = classScanner.scanClassesAnnotatedBy(managedAnnotations);
 
-        Map<Class<?>, BeanDefinition> beanDefinitionMap = MetadataExtractor.getInstance().buildBeanDefinition(componentClasses);
+        Map<Class<?>, BeanDefinition> beanDefinitionMap = metadataExtractor.buildBeanDefinitions(componentClasses);
 
         // initialize beans in order
         List<Class<?>> correctOrderForInitializingBeans = findCorrectOrderForInitializingBeans(beanDefinitionMap);
+
         for (Class<?> clazz : correctOrderForInitializingBeans) {
-            Object bean = beanFactory.createBean(clazz, Collections.emptyMap());
-            beans.put(clazz, bean);
+
+            BeanDefinition beanDefinition = beanDefinitionMap.get(clazz);
+            Object bean = beanFactory.createBean(beanDefinition,
+                    Collections.unmodifiableMap(clazzToBean),
+                    Collections.unmodifiableMap(bindNameToBeans));
+            clazzToBean.put(clazz, bean);
+
+            for (String bindName : beanDefinition.getBindNames()) {
+
+                Set<Object> bindingBeans = bindNameToBeans.get(bindName);
+
+                if (bindingBeans == null) {
+                    Set<Object> newBindingBeans = new HashSet<>();
+                    newBindingBeans.add(bean);
+                    bindNameToBeans.put(bindName, newBindingBeans);
+                    continue;
+                }
+
+                bindingBeans.add(bean);
+                bindNameToBeans.put(bindName, bindingBeans);
+            }
         }
     }
 
@@ -88,7 +104,7 @@ public class IoCContainer {
             recursionStack.remove(node); // Node is not in the current path anymore
             for (Class<?> neighbor : graph.get(node)) {
                 if (recursionStack.contains(neighbor)) {
-                    throw new RuntimeException("Circular dependency detected involving: " + neighbor.getName());
+                    throw new RuntimeException(String.format("Circular dependency detected involving: %s", neighbor.getName()));
                 }
                 inDegree.put(neighbor, inDegree.get(neighbor) - 1);
                 if (inDegree.get(neighbor) == 0) {
@@ -109,7 +125,7 @@ public class IoCContainer {
     }
 
     public Object getBean(Class<?> beanClass) {
-        return beans.get(beanClass);
+        return clazzToBean.get(beanClass);
     }
 
     private void callPostConstructHook(Object bean) {
