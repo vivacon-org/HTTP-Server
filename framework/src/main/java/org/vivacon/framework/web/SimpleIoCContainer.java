@@ -2,13 +2,19 @@ package org.vivacon.framework.web;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Objects;
 
+@Deprecated
 public class SimpleIoCContainer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleIoCContainer.class);

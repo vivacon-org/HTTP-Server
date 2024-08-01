@@ -39,6 +39,7 @@ public class IoCContainer {
             Object bean = beanFactory.createBean(beanDefinition,
                     Collections.unmodifiableMap(clazzToBean),
                     Collections.unmodifiableMap(bindNameToBeans));
+            invokePostConstructHook(bean);
             clazzToBean.put(clazz, bean);
 
             for (String bindName : beanDefinition.getBindNames()) {
@@ -128,7 +129,7 @@ public class IoCContainer {
         return clazzToBean.get(beanClass);
     }
 
-    private void callPostConstructHook(Object bean) {
+    private void invokePostConstructHook(Object bean) {
         try {
             Method method = bean.getClass().getMethod("init");
 

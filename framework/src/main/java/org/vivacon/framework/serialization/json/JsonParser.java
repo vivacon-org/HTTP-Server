@@ -1,4 +1,4 @@
-package org.vivacon.framework.serialization;
+package org.vivacon.framework.serialization.json;
 
 import java.util.Stack;
 
@@ -41,22 +41,34 @@ public class JsonParser {
                 currentNode = newNode;
                 keyBuilder.setLength(0);
                 isKey = true;
-            } else if (ch == '}') {
+                continue;
+            }
+
+            if (ch == '}') {
                 if (valueBuilder.length() > 0) {
                     currentNode.setValue(valueBuilder.toString().trim());
                     valueBuilder.setLength(0);
                 }
                 currentNode = stack.pop();
                 isKey = true;
-            } else if (ch == ':') {
+                continue;
+            }
+
+            if (ch == ':') {
                 isKey = false;
-            } else if (ch == ',') {
+                continue;
+            }
+
+            if (ch == ',') {
                 if (valueBuilder.length() > 0) {
                     currentNode.setValue(valueBuilder.toString().trim());
                     valueBuilder.setLength(0);
                 }
                 isKey = true;
-            } else if (!Character.isWhitespace(ch)) {
+                continue;
+            }
+
+            if (!Character.isWhitespace(ch)) {
                 if (isKey) {
                     keyBuilder.append(ch);
                 } else {

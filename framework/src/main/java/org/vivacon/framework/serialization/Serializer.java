@@ -1,6 +1,6 @@
 package org.vivacon.framework.serialization;
 
-public interface JsonSerializer {
+public interface Serializer {
 
     String serialize(Object obj);
 }

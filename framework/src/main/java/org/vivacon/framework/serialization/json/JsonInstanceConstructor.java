@@ -1,10 +1,10 @@
-package org.vivacon.framework.serialization;
+package org.vivacon.framework.serialization.json;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
-public class ObjectConstructor {
+public class JsonInstanceConstructor {
 
     public Object constructObject(JsonNode jsonNode, Class<?> expectedClazz) {
         Class<?> definedClazz;
