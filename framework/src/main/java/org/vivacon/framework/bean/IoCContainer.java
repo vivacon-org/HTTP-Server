@@ -5,6 +5,7 @@ import org.vivacon.framework.web.Component;
 import org.vivacon.framework.web.Controller;
 import org.vivacon.framework.web.Service;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -22,23 +23,21 @@ public class IoCContainer {
 
     public IoCContainer(ClassScanner classScanner,
                         BeanFactory beanFactory) {
+        beans = new HashMap<>();
 
-        Set<Class<?>> componentAnnotationTypes = new HashSet<>();
-        componentAnnotationTypes.add(Component.class);
-        componentAnnotationTypes.add(Service.class);
-        componentAnnotationTypes.add(Controller.class);
+        Set<Class<? extends Annotation>> managedAnnotations = new HashSet<>();
+        managedAnnotations.add(Component.class);
+        managedAnnotations.add(Service.class);
+        managedAnnotations.add(Controller.class);
 
-        List<Class<?>> componentClasses = classScanner.scanClassesAnnotatedBy(componentAnnotationTypes);
+        List<Class<?>> componentClasses = classScanner.scanClassesAnnotatedBy(managedAnnotations);
+
+        Map<Class<?>, BeanDefinition> beanDefinitionMap = MetadataExtractor.getInstance().buildBeanDefinition(componentClasses);
 
         // initialize beans in order
-        for (Class<?> clazz : componentClasses) {
+        List<Class<?>> correctOrderForInitializingBeans = findCorrectOrderForInitializingBeans(beanDefinitionMap);
+        for (Class<?> clazz : correctOrderForInitializingBeans) {
             Object bean = beanFactory.createBean(clazz, Collections.emptyMap());
-            beans.put(clazz, bean);
-        }
-
-        // inject
-        for (Class<?> clazz : componentClasses) {
-            Object bean = beanFactory.createBean(clazz, beans);
             beans.put(clazz, bean);
         }
     }
@@ -49,7 +48,7 @@ public class IoCContainer {
      *
      * @return
      */
-    private List<Class<?>> findCorrectOrderForInitializingBeans() {
+    private List<Class<?>> findCorrectOrderForInitializingBeans(Map<Class<?>, BeanDefinition> beanDefinitions) {
         Map<Class<?>, Integer> inDegree = new HashMap<>();
         Map<Class<?>, List<Class<?>>> graph = new HashMap<>();
         Queue<Class<?>> queue = new LinkedList<>();
@@ -60,7 +59,6 @@ public class IoCContainer {
         // Initialize inDegree and graph
         for (Map.Entry<Class<?>, BeanDefinition> entry : beanDefinitions.entrySet()) {
             Class<?> beanClass = entry.getKey();
-            BeanDefinition definition = entry.getValue();
             inDegree.put(beanClass, 0);
             graph.put(beanClass, new ArrayList<>());
         }
@@ -69,7 +67,7 @@ public class IoCContainer {
         for (Map.Entry<Class<?>, BeanDefinition> entry : beanDefinitions.entrySet()) {
             Class<?> beanClass = entry.getKey();
             BeanDefinition definition = entry.getValue();
-            for (Class<?> dependency : definition.getDependencies()) {
+            for (Class<?> dependency : definition.getDependenciesToBindingNames().keySet()) {
                 graph.get(dependency).add(beanClass);
                 inDegree.put(beanClass, inDegree.get(beanClass) + 1);
             }

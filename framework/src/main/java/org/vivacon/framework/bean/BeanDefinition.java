@@ -1,27 +1,31 @@
 package org.vivacon.framework.bean;
 
-public class BeanDefinition {
-    private final String bindName;
-    private final Class<?> beanClass;
-    private final Object instance;
+import java.util.LinkedHashMap;
+import java.util.Set;
 
-    public BeanDefinition(String bindName,
-                          Class<?> beanClass,
-                          Object instance) {
-        this.bindName = bindName;
+public class BeanDefinition {
+    private final Class<?> beanClass;
+
+    private final Set<String> bindNames;
+    private final LinkedHashMap<Class<?>, Set<String>> dependenciesToBindingNames;
+
+    public BeanDefinition(Class<?> beanClass,
+                          Set<String> bindNames,
+                          LinkedHashMap<Class<?>, Set<String>> dependenciesToBindingNames) {
+        this.bindNames = bindNames;
         this.beanClass = beanClass;
-        this.instance = instance;
+        this.dependenciesToBindingNames = dependenciesToBindingNames;
     }
 
-    public String getBindName() {
-        return bindName;
+    public Set<String> getBindNames() {
+        return bindNames;
     }
 
     public Class<?> getBeanClass() {
         return beanClass;
     }
 
-    public Object getInstance() {
-        return instance;
+    public LinkedHashMap<Class<?>, Set<String>> getDependenciesToBindingNames() {
+        return dependenciesToBindingNames;
     }
 }
