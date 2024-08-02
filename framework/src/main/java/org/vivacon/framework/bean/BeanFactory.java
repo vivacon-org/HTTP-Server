@@ -47,10 +47,7 @@ public class BeanFactory {
 
             int runner = 0;
             for (Field field : declaredFields) {
-
-                String beanName = field.getName();
                 Object injectedDependency = dependencies[runner];
-
                 field.setAccessible(true);
                 field.set(bean, injectedDependency);
                 runner++;

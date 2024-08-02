@@ -1,13 +1,12 @@
-package org.vivacon.framework.serialization.json;
+package org.vivacon.framework.serialization.json.deserializer;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class JsonNode {
     private final Map<String, JsonNode> children = new HashMap<>();
-    private String key;
-    private String value;
-    private boolean isLeaf;
+    private final String key;
+    private final String value;
 
     public void addChild(String key, JsonNode child) {
         children.put(key, child);
@@ -20,7 +19,6 @@ public class JsonNode {
     public JsonNode(String key, String value) {
         this.key = key;
         this.value = value;
-        this.isLeaf = true;
     }
 
     public String getValue() {
@@ -31,9 +29,22 @@ public class JsonNode {
         return children;
     }
 
+    private boolean isLeaf() {
+
+        if (value != null) {
+            return true;
+        }
+
+        if (!children.isEmpty()) {
+            return false;
+        }
+
+        throw new RuntimeException("Invalid node");
+    }
+
     @Override
     public String toString() {
-        if (isLeaf) {
+        if (isLeaf()) {
             return "\"" + value + "\"";
         } else {
             StringBuilder sb = new StringBuilder("{");
