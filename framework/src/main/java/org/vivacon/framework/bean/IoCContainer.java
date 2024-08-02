@@ -131,12 +131,14 @@ public class IoCContainer {
 
     private void invokePostConstructHook(Object bean) {
         try {
-            Method method = bean.getClass().getMethod("init");
-
-            if (method.isAnnotationPresent(PostConstruct.class)) {
-                method.invoke(bean);
+            Class<?> clazz = bean.getClass();
+            Method[] methods = clazz.getMethods();
+            for (Method method : methods) {
+                if (method.isAnnotationPresent(PostConstruct.class)) {
+                    method.invoke(bean);
+                }
             }
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+        } catch (InvocationTargetException | IllegalAccessException e) {
             // no op
         }
     }

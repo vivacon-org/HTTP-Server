@@ -1,6 +1,7 @@
 package org.vivacon.framework.bean;
 
 import java.lang.reflect.Constructor;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
@@ -21,7 +22,7 @@ public class BeanDefinition {
     }
 
     public Set<String> getBindNames() {
-        return bindNames;
+        return Collections.unmodifiableSet(bindNames);
     }
 
     public Class<?> getBeanClass() {
@@ -33,6 +34,6 @@ public class BeanDefinition {
     }
 
     public LinkedHashMap<Class<?>, Set<String>> getDependenciesToBindingNames() {
-        return dependenciesToBindingNames;
+        return new LinkedHashMap<>(dependenciesToBindingNames);
     }
 }

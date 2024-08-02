@@ -10,7 +10,7 @@ logging.captureStandardOutput(LogLevel.INFO)
 val libs: VersionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 dependencies {
-    implementation(libs.findBundle("serverCompile").get())
-    runtimeOnly(libs.findBundle("serverRuntime").get())
+    implementation(libs.findBundle("commonCompile").get())
     implementation(project(":framework"))
+    testImplementation(libs.findBundle("testCompile").get())
 }
