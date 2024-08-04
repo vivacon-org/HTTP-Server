@@ -36,4 +36,14 @@ public class BeanDefinition {
     public LinkedHashMap<Class<?>, Set<String>> getDependenciesToBindingNames() {
         return new LinkedHashMap<>(dependenciesToBindingNames);
     }
+
+    @Override
+    public String toString() {
+        return "BeanDefinition{" +
+                "beanClass=" + beanClass +
+                ", bindNames=" + bindNames +
+                ", injectedConstructor=" + injectedConstructor +
+                ", dependenciesToBindingNames=" + dependenciesToBindingNames +
+                '}';
+    }
 }

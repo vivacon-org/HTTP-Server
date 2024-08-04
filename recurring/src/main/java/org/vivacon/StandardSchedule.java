@@ -2,6 +2,7 @@ package org.vivacon;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -13,7 +14,7 @@ final class StandardSchedule<T> implements Schedule<T> {
 
     StandardSchedule(List<ScheduleElement<T>> elements) {
         Objects.requireNonNull(elements);
-        this.elements = List.copyOf(elements);
+        this.elements = elements;
     }
 
     @Override

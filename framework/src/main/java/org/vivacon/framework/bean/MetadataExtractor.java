@@ -121,7 +121,7 @@ public class MetadataExtractor {
         }
 
         // only get the public constructors
-        Constructor<?>[] constructors = beanClazz.getConstructors();
+        Constructor<?>[] constructors = beanClazz.getDeclaredConstructors();
 
         if (constructors.length == 1 && defeaultConstructor != null) {
             return defeaultConstructor;
