@@ -18,13 +18,13 @@ public class IoCContainer {
     private final ClassScanner classScanner;
     private final MetadataExtractor metadataExtractor;
     private final BeanFactory beanFactory;
-    private final BeanDefinitionOrderResolver resolver;
+    private final BeansInitiationOrderResolver resolver;
     private final Set<Class<? extends Annotation>> managedAnnotations;
 
     public IoCContainer(ClassScanner classScanner,
                         MetadataExtractor metadataExtractor,
                         BeanFactory beanFactory,
-                        BeanDefinitionOrderResolver resolver,
+                        BeansInitiationOrderResolver resolver,
                         Set<Class<? extends Annotation>> managedAnnotations) {
         this.clazzToBean = new HashMap<>();
         this.bindNameToBeans = new HashMap<>();

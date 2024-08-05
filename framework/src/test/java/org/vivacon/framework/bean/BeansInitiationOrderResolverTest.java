@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-class BeanDefinitionOrderResolverTest {
+class BeansInitiationOrderResolverTest {
 
     @Test
     void resolveOrder_allBeansDependenciesAreValid() {
@@ -18,7 +18,7 @@ class BeanDefinitionOrderResolverTest {
                 StudentService.class,  DepartmentService.class);
         Map<Class<?>, BeanDefinition> beanDefinitionMap = MetadataExtractor.getInstance().buildBeanDefinitions(classes);
 
-        List<Class<?>> actualOrder = BeanDefinitionOrderResolver.getInstance().resolveOrder(beanDefinitionMap);
+        List<Class<?>> actualOrder = BeansInitiationOrderResolver.getInstance().resolveOrder(beanDefinitionMap);
 
         Assertions.assertEquals(classes.size(), actualOrder.size());
 
@@ -43,7 +43,7 @@ class BeanDefinitionOrderResolverTest {
         Map<Class<?>, BeanDefinition> beanDefinitionMap = MetadataExtractor.getInstance().buildBeanDefinitions(classes);
 
         Assertions.assertThrows(Exception.class, () -> {
-            BeanDefinitionOrderResolver.getInstance().resolveOrder(beanDefinitionMap);
+            BeansInitiationOrderResolver.getInstance().resolveOrder(beanDefinitionMap);
         });
     }
 

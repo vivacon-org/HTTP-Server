@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
-public class BeanDefinitionOrderResolver {
+public class BeansInitiationOrderResolver {
 
-    private static final BeanDefinitionOrderResolver instance = new BeanDefinitionOrderResolver();
+    private static final BeansInitiationOrderResolver instance = new BeansInitiationOrderResolver();
 
-    private BeanDefinitionOrderResolver(){}
+    private BeansInitiationOrderResolver(){}
 
-    public static BeanDefinitionOrderResolver getInstance(){
+    public static BeansInitiationOrderResolver getInstance(){
         return instance;
     }
 
