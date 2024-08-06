@@ -2,6 +2,10 @@ package org.vivacon.framework.web;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vivacon.framework.bean.annotations.Component;
+import org.vivacon.framework.bean.annotations.Service;
+import org.vivacon.framework.web.annotations.Controller;
+import org.vivacon.framework.web.annotations.RequestMapping;
 
 import java.io.File;
 import java.lang.reflect.Field;

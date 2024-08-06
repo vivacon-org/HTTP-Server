@@ -2,9 +2,10 @@ package org.vivacon.framework.bean;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.vivacon.framework.web.Component;
-import org.vivacon.framework.web.Controller;
-import org.vivacon.framework.web.Service;
+import org.vivacon.framework.bean.annotations.Autowired;
+import org.vivacon.framework.bean.annotations.Component;
+import org.vivacon.framework.web.annotations.Controller;
+import org.vivacon.framework.bean.annotations.Service;
 
 import java.util.Arrays;
 import java.util.List;

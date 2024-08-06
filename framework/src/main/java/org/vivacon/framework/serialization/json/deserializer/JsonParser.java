@@ -1,62 +1,104 @@
 package org.vivacon.framework.serialization.json.deserializer;
 
-import java.io.IOException;
-import java.io.StringReader;
+import org.vivacon.framework.serialization.json.deserializer.node.JsonArrayNode;
+import org.vivacon.framework.serialization.json.deserializer.node.JsonBooleanNode;
+import org.vivacon.framework.serialization.json.deserializer.node.JsonNode;
+import org.vivacon.framework.serialization.json.deserializer.node.JsonNullNode;
+import org.vivacon.framework.serialization.json.deserializer.node.JsonNumberNode;
+import org.vivacon.framework.serialization.json.deserializer.node.JsonObjectNode;
+import org.vivacon.framework.serialization.json.deserializer.node.JsonStringNode;
+import org.vivacon.framework.serialization.json.deserializer.JsonLexer.Token;
+import org.vivacon.framework.serialization.json.deserializer.JsonLexer.TokenType;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 public class JsonParser {
-    private StringReader reader;
-    private int currentChar;
+    private final List<Token> tokens;
+    private int index = 0;
 
-    public JsonParser(String json) {
-        reader = new StringReader(json);
+    public JsonParser(List<Token> tokens) {
+        this.tokens = tokens;
     }
 
-    private int readNext() throws IOException {
-        return reader.read();
+    private Token currentToken() {
+        return tokens.get(index);
     }
 
-    public void readStartObject() throws IOException {
-        if (readNext() != '{') {
-            throw new IOException("Expected start of object");
+    private void consumeToken() {
+        index++;
+    }
+
+    public JsonNode parse() throws Exception {
+        Token token = currentToken();
+        if (token.type == TokenType.LEFT_BRACE) {
+            return parseObject();
         }
-    }
 
-    public void readEndObject() throws IOException {
-        if (readNext() != '}') {
-            throw new IOException("Expected end of object");
+        if (token.type == TokenType.LEFT_BRACKET) {
+            return parseArray();
         }
+
+        throw new Exception("Unexpected token: " + token);
     }
 
-    public String readFieldName() throws IOException {
-        // Simplified for demonstration purposes
-        return readString();
-    }
-
-    public String readString() throws IOException {
-        StringBuilder sb = new StringBuilder();
-        int ch;
-        while ((ch = readNext()) != '"') {
-            sb.append((char) ch);
+    private JsonNode parseObject() throws Exception {
+        Map<String, JsonNode> map = new HashMap<>();
+        consumeToken(); // Consume LEFT_BRACE
+        while (currentToken().type != TokenType.RIGHT_BRACE) {
+            if (currentToken().type != TokenType.STRING) {
+                throw new Exception("Expected STRING token for key.");
+            }
+            String key = currentToken().value;
+            consumeToken(); // Consume STRING
+            if (currentToken().type != TokenType.COLON) {
+                throw new Exception("Expected COLON token.");
+            }
+            consumeToken(); // Consume COLON
+            JsonNode value = parseValue();
+            map.put(key, value);
+            if (currentToken().type == TokenType.COMMA) {
+                consumeToken(); // Consume COMMA
+            }
         }
-        return sb.toString();
+        consumeToken(); // Consume RIGHT_BRACE
+        return new JsonObjectNode(map);
     }
 
-    public Number readNumber() throws IOException {
-        StringBuilder sb = new StringBuilder();
-        int ch;
-        while ((ch = readNext()) != ',' && ch != '}') {
-            sb.append((char) ch);
+    private JsonNode parseArray() throws Exception {
+        List<JsonNode> list = new ArrayList<>();
+        consumeToken(); // Consume LEFT_BRACKET
+        while (currentToken().type != TokenType.RIGHT_BRACKET) {
+            JsonNode value = parseValue();
+            list.add(value);
+            if (currentToken().type == TokenType.COMMA) {
+                consumeToken(); // Consume COMMA
+            }
         }
-        return Double.parseDouble(sb.toString());
+        consumeToken(); // Consume RIGHT_BRACKET
+        return new JsonArrayNode(list);
     }
 
-    public void skipWhitespace() throws IOException {
-        int ch;
-        while ((ch = readNext()) == ' ' || ch == '\n' || ch == '\r' || ch == '\t') {
-            // Skip whitespace
+    private JsonNode parseValue() throws Exception {
+        Token token = currentToken();
+        if (token.type == TokenType.STRING) {
+            consumeToken();
+            return new JsonStringNode(token.value);
+        } else if (token.type == TokenType.NUMBER) {
+            consumeToken();
+            return new JsonNumberNode(Double.parseDouble(token.value));
+        } else if (token.type == TokenType.BOOLEAN) {
+            consumeToken();
+            return new JsonBooleanNode(Boolean.parseBoolean(token.value));
+        } else if (token.type == TokenType.NULL) {
+            consumeToken();
+            return new JsonNullNode();
+        } else if (token.type == TokenType.LEFT_BRACE) {
+            return parseObject();
+        } else if (token.type == TokenType.LEFT_BRACKET) {
+            return parseArray();
         }
-        // Put back the last read character
-        reader.reset();
+        throw new Exception("Unexpected token: " + token);
     }
 }
-

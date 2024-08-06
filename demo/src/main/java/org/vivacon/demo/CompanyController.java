@@ -1,9 +1,9 @@
 package org.vivacon.demo;
 
 
-import org.vivacon.framework.bean.Autowired;
-import org.vivacon.framework.web.Controller;
-import org.vivacon.framework.web.RequestMapping;
+import org.vivacon.framework.bean.annotations.Autowired;
+import org.vivacon.framework.web.annotations.Controller;
+import org.vivacon.framework.web.annotations.RequestMapping;
 
 @Controller
 @RequestMapping(path = "/")

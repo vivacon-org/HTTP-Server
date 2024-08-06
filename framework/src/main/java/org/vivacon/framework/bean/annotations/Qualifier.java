@@ -1,13 +1,12 @@
-package org.vivacon.framework.web;
+package org.vivacon.framework.bean.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@Target({ElementType.TYPE, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-public @interface RequestMapping {
-    String path() default "";
-
+public @interface Qualifier {
+    String name();
 }

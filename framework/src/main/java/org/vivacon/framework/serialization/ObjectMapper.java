@@ -1,6 +1,6 @@
 package org.vivacon.framework.serialization;
 
-import org.vivacon.framework.serialization.json.deserializer.JsonNode;
+import org.vivacon.framework.serialization.json.deserializer.node.JsonNode;
 
 import java.io.Reader;
 

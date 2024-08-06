@@ -1,5 +1,6 @@
 package org.vivacon.framework.bean;
 
+import org.vivacon.framework.bean.annotations.PostConstruct;
 import org.vivacon.framework.core.ClassScanner;
 
 import java.lang.annotation.Annotation;

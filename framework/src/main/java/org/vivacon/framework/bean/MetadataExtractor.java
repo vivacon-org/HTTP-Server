@@ -2,6 +2,8 @@ package org.vivacon.framework.bean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vivacon.framework.bean.annotations.Autowired;
+import org.vivacon.framework.bean.annotations.Qualifier;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

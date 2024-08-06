@@ -1,4 +1,4 @@
-package org.vivacon.framework.web;
+package org.vivacon.framework.web.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
