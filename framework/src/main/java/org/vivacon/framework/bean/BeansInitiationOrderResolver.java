@@ -10,12 +10,12 @@ import java.util.Queue;
 
 public class BeansInitiationOrderResolver {
 
-    private static final BeansInitiationOrderResolver instance = new BeansInitiationOrderResolver();
+    private static final BeansInitiationOrderResolver INSTANCE = new BeansInitiationOrderResolver();
 
     private BeansInitiationOrderResolver(){}
 
     public static BeansInitiationOrderResolver getInstance(){
-        return instance;
+        return INSTANCE;
     }
 
     public List<Class<?>> resolveOrder(Map<Class<?>, BeanDefinition> beanDefinitions) {

@@ -6,7 +6,6 @@ import java.io.Reader;
 
 public class StdJsonDeserializer implements Deserializer {
 
-
     @Override
     public <T> T deserialize(String serializedString, Class<? extends T> expectedClass) {
         return null;
