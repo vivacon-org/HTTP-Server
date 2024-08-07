@@ -36,13 +36,13 @@ public class BeanFactory {
 
         try {
             if (injectedConstructor.getParameterCount() > 0) {
-                Object[] dependencies = populateDependencies(beanDefinition.getDependenciesToBindingNames(), bindNameToBeans);
+                Object[] dependencies = populateDependencies(beanDefinition.getFieldToBindingNames(), bindNameToBeans);
                 return injectedConstructor.newInstance(dependencies);
             }
 
 
             Object bean = injectedConstructor.newInstance();
-            Object[] dependencies = populateDependencies(beanDefinition.getDependenciesToBindingNames(), bindNameToBeans);
+            Object[] dependencies = populateDependencies(beanDefinition.getFieldToBindingNames(), bindNameToBeans);
             Field[] declaredFields = beanDefinition.getBeanClass().getDeclaredFields();
 
             int runner = 0;
@@ -60,14 +60,14 @@ public class BeanFactory {
         }
     }
 
-    private Object[] populateDependencies(LinkedHashMap<Class<?>, Set<String>> dependencyToItsBindNames,
+    private Object[] populateDependencies(LinkedHashMap<Field, Set<String>> dependencyToItsBindNames,
                                           Map<String, Set<Object>> bindNameToBeans) {
 
         Object[] dependencies = new Object[dependencyToItsBindNames.size()];
 
         int runner = 0;
 
-        for (Map.Entry<Class<?>, Set<String>> entry : dependencyToItsBindNames.entrySet()) {
+        for (Map.Entry<Field, Set<String>> entry : dependencyToItsBindNames.entrySet()) {
 
             Set<String> dependencyBindingNames = entry.getValue();
 
@@ -85,7 +85,7 @@ public class BeanFactory {
         return dependencies;
     }
 
-    private Optional<Object> findBeansViaBindingNames(Set<String> bindingNames,
+    protected Optional<Object> findBeansViaBindingNames(Set<String> bindingNames,
                                                       Map<String, Set<Object>> bindNameToBeans) {
 
         for (String bindingName : bindingNames) {

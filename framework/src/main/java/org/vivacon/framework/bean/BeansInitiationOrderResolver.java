@@ -1,5 +1,6 @@
 package org.vivacon.framework.bean;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -35,7 +36,7 @@ public class BeansInitiationOrderResolver {
             Class<?> beanClass = entry.getKey();
             BeanDefinition definition = entry.getValue();
 
-            for (Class<?> dependency : definition.getDependenciesToBindingNames().keySet()) {
+            for (Field dependency : definition.getFieldToBindingNames().keySet()) {
                 if (graph.get(dependency) == null){
                     continue;
                 }

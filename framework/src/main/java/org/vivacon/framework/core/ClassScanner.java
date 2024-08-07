@@ -19,7 +19,7 @@ public class ClassScanner {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClassScanner.class);
 
-    private ClassScanner() {
+    public ClassScanner() {
         // Private constructor to prevent instantiation
     }
 
@@ -97,7 +97,7 @@ public class ClassScanner {
         return classes;
     }
 
-    private List<File> scanDirectory(File rootDirectory) {
+    public List<File> scanDirectory(File rootDirectory) {
         Queue<File> directoriesToScan = new LinkedList<>();
         directoriesToScan.add(rootDirectory);
 
@@ -126,7 +126,7 @@ public class ClassScanner {
         return classFiles;
     }
 
-    private List<File> scanJarFile(File jarFile) {
+    public List<File> scanJarFile(File jarFile) {
         List<File> classesInJar = new LinkedList<>();
         try (JarFile jf = new JarFile(jarFile)) {
             for (JarEntry entry : Collections.list(jf.entries())) {

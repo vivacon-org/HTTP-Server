@@ -20,13 +20,17 @@ public class MetadataExtractor {
 
     private static final Logger LOG = LoggerFactory.getLogger(MetadataExtractor.class);
 
-    private final Map<Class<?>, Set<String>> beanToBindingNamesCache;
+    private final Map<Class<?>, Set<String>> beanClassToBindingNamesCache;
 
     private MetadataExtractor() {
-        beanToBindingNamesCache = new HashMap<>();
+        beanClassToBindingNamesCache = new HashMap<>();
         // Private constructor to prevent instantiation
     }
 
+    public void setBeanClassToBindingNamesCache(Map<Class<?>, Set<String>> cache) {
+        beanClassToBindingNamesCache.clear();
+        beanClassToBindingNamesCache.putAll(cache);
+    }
     private static final MetadataExtractor INSTANCE = new MetadataExtractor();
 
     public static MetadataExtractor getInstance() {
@@ -39,61 +43,69 @@ public class MetadataExtractor {
         for (Class<?> clazz : componentClasses) {
             Set<String> beanBindingNames = getBeanBindingName(clazz);
             Constructor<?> constructorToInject = getConstructorToInject(clazz);
-            LinkedHashMap<Class<?>, Set<String>> dependencyToItsBindNames = getDependencyToItsBindNames(constructorToInject);
+            LinkedHashMap<Parameter, Set<String>> parameterToItsBindNames = getDependencyToItsBindNames(constructorToInject);
 
-            if (!dependencyToItsBindNames.isEmpty()) {
-                new BeanDefinition(clazz, beanBindingNames, constructorToInject, dependencyToItsBindNames);
+            if (!parameterToItsBindNames.isEmpty()) {
+                new BeanDefinition.BeanDefinitionBuilder()
+                        .setBeanClass(clazz)
+                        .setBindNames(beanBindingNames)
+                        .setInjectedConstructor(constructorToInject)
+                        .setParameterToBindingNames(parameterToItsBindNames).build();
             }
-
-            classToBeanDefinition.put(clazz, new BeanDefinition(clazz, beanBindingNames, constructorToInject, getDependencyToItsBindNames(clazz)));
+            LinkedHashMap<Field, Set<String>> fieldToItsBindNames = getDependencyToItsBindNames(clazz);
+            classToBeanDefinition.put(clazz, new BeanDefinition.BeanDefinitionBuilder()
+                    .setBeanClass(clazz)
+                    .setBindNames(beanBindingNames)
+                    .setInjectedConstructor(constructorToInject)
+                    .setFieldToBindingNames(fieldToItsBindNames).build());
         }
-
         return classToBeanDefinition;
     }
 
-    private LinkedHashMap<Class<?>, Set<String>> getDependencyToItsBindNames(Constructor<?> constructor) {
+    public LinkedHashMap<Parameter, Set<String>> getDependencyToItsBindNames(Constructor<?> constructor) {
         Parameter[] parameters = constructor.getParameters();
-        LinkedHashMap<Class<?>, Set<String>> dependencyToItsBindNames = new LinkedHashMap<>();
+        LinkedHashMap<Parameter, Set<String>> dependencyToItsBindNames = new LinkedHashMap<>();
 
         for (Parameter parameter : parameters) {
             Class<?> dependencyType = parameter.getType();
 
             Set<String> qualifiedNames = Arrays.stream(parameter.getAnnotationsByType(Qualifier.class)).map(Qualifier::name).collect(Collectors.toSet());
             if (!qualifiedNames.isEmpty()) {
-                dependencyToItsBindNames.put(dependencyType, qualifiedNames);
+                dependencyToItsBindNames.put(parameter, qualifiedNames);
                 continue;
             }
 
             Set<String> dependencyBindNames = getBeanBindingName(dependencyType);
-            dependencyToItsBindNames.put(dependencyType, dependencyBindNames);
+            dependencyToItsBindNames.put(parameter, dependencyBindNames);
         }
 
         return dependencyToItsBindNames;
     }
 
-    private LinkedHashMap<Class<?>, Set<String>> getDependencyToItsBindNames(Class<?> clazz) {
+
+    public LinkedHashMap<Field, Set<String>> getDependencyToItsBindNames(Class<?> clazz) {
         Field[] declaredFields = clazz.getDeclaredFields();
-        LinkedHashMap<Class<?>, Set<String>> dependencyToItsBindNames = new LinkedHashMap<>();
+        LinkedHashMap<Field, Set<String>> dependencyToItsBindNames = new LinkedHashMap<>();
 
         for (Field field : declaredFields) {
             Class<?> dependencyType = field.getType();
 
             Set<String> qualifiedNames = Arrays.stream(field.getAnnotationsByType(Qualifier.class)).map(Qualifier::name).collect(Collectors.toSet());
             if (!qualifiedNames.isEmpty()) {
-                dependencyToItsBindNames.put(dependencyType, qualifiedNames);
+                dependencyToItsBindNames.put(field, qualifiedNames);
                 continue;
             }
 
             Set<String> dependencyBindNames = getBeanBindingName(dependencyType);
-            dependencyToItsBindNames.put(dependencyType, dependencyBindNames);
+            dependencyToItsBindNames.put(field, dependencyBindNames);
         }
 
         return dependencyToItsBindNames;
     }
 
-    private Set<String> getBeanBindingName(Class<?> beanClazz) {
-        if (beanToBindingNamesCache.get(beanClazz) != null) {
-            return beanToBindingNamesCache.get(beanClazz);
+    public Set<String> getBeanBindingName(Class<?> beanClazz) {
+        if (beanClassToBindingNamesCache.get(beanClazz) != null) {
+            return beanClassToBindingNamesCache.get(beanClazz);
         }
 
         Set<String> bindingNames = Arrays.stream(beanClazz.getInterfaces()).map(Class::getSimpleName).collect(Collectors.toSet());
@@ -101,7 +113,7 @@ public class MetadataExtractor {
 
         Qualifier[] qualifiers = beanClazz.getAnnotationsByType(Qualifier.class);
         if (qualifiers.length == 0) {
-            beanToBindingNamesCache.put(beanClazz, bindingNames);
+            beanClassToBindingNamesCache.put(beanClazz, bindingNames);
             return bindingNames;
         }
 
@@ -110,11 +122,11 @@ public class MetadataExtractor {
             bindingNames.add(qualifiedName);
         }
 
-        beanToBindingNamesCache.put(beanClazz, bindingNames);
+        beanClassToBindingNamesCache.put(beanClazz, bindingNames);
         return bindingNames;
     }
 
-    private Constructor<?> getConstructorToInject(Class<?> beanClazz) {
+    public Constructor<?> getConstructorToInject(Class<?> beanClazz) {
         Constructor<?> defeaultConstructor = null;
         try {
             defeaultConstructor = beanClazz.getDeclaredConstructor();
@@ -135,7 +147,7 @@ public class MetadataExtractor {
 
         for (Constructor<?> constructor : constructors) {
             Autowired[] attachedAutowiredAnnotations = constructor.getAnnotationsByType(Autowired.class);
-            if (attachedAutowiredAnnotations.length > 1) {
+            if (attachedAutowiredAnnotations.length > 0) {
                 return constructor;
             }
         }

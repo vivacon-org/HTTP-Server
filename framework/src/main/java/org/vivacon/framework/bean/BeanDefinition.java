@@ -1,7 +1,8 @@
 package org.vivacon.framework.bean;
 
 import java.lang.reflect.Constructor;
-import java.util.Collections;
+import java.lang.reflect.Field;
+import java.lang.reflect.Parameter;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
@@ -9,32 +10,71 @@ public class BeanDefinition {
     private final Class<?> beanClass;
     private final Set<String> bindNames;
     private final Constructor<?> injectedConstructor;
-    private final LinkedHashMap<Class<?>, Set<String>> dependenciesToBindingNames;
-
-    public BeanDefinition(Class<?> beanClass,
-                          Set<String> bindNames,
-                          Constructor<?> injectedConstructor,
-                          LinkedHashMap<Class<?>, Set<String>> dependenciesToBindingNames) {
-        this.bindNames = bindNames;
-        this.beanClass = beanClass;
-        this.injectedConstructor = injectedConstructor;
-        this.dependenciesToBindingNames = dependenciesToBindingNames;
-    }
-
-    public Set<String> getBindNames() {
-        return Collections.unmodifiableSet(bindNames);
-    }
+    private final LinkedHashMap<Parameter, Set<String>> parameterToBindingNames;
+    private final LinkedHashMap<Field, Set<String>> fieldToBindingNames;
 
     public Class<?> getBeanClass() {
         return beanClass;
+    }
+
+    public Set<String> getBindNames() {
+        return bindNames;
     }
 
     public Constructor<?> getInjectedConstructor() {
         return injectedConstructor;
     }
 
-    public LinkedHashMap<Class<?>, Set<String>> getDependenciesToBindingNames() {
-        return new LinkedHashMap<>(dependenciesToBindingNames);
+
+    public LinkedHashMap<Field, Set<String>> getFieldToBindingNames() {
+        return fieldToBindingNames;
+    }
+
+
+
+    private BeanDefinition(BeanDefinitionBuilder beanDefinitionBuilder) {
+        this.beanClass = beanDefinitionBuilder.beanClass;
+        this.bindNames = beanDefinitionBuilder.bindNames;
+        this.injectedConstructor = beanDefinitionBuilder.injectedConstructor;
+        this.parameterToBindingNames = beanDefinitionBuilder.parameterToBindingNames;
+        this.fieldToBindingNames = beanDefinitionBuilder.fieldToBindingNames;
+    }
+
+
+    public static class BeanDefinitionBuilder {
+        private Class<?> beanClass;
+        private Set<String> bindNames;
+        private Constructor<?> injectedConstructor;
+        private LinkedHashMap<Parameter, Set<String>> parameterToBindingNames;
+        private LinkedHashMap<Field, Set<String>> fieldToBindingNames;
+
+        public BeanDefinitionBuilder setBeanClass(Class<?> beanClass) {
+            this.beanClass = beanClass;
+            return this;
+        }
+
+        public BeanDefinitionBuilder setBindNames(Set<String> bindNames) {
+            this.bindNames = bindNames;
+            return this;
+        }
+
+        public BeanDefinitionBuilder setInjectedConstructor(Constructor<?> injectedConstructor) {
+            this.injectedConstructor = injectedConstructor;
+            return this;
+        }
+
+        public BeanDefinitionBuilder setParameterToBindingNames(LinkedHashMap<Parameter, Set<String>> parameterToBindingNames) {
+            this.parameterToBindingNames = parameterToBindingNames;
+            return this;
+        }
+
+        public BeanDefinitionBuilder setFieldToBindingNames(LinkedHashMap<Field, Set<String>> fieldToBindingNames) {
+            this.fieldToBindingNames = fieldToBindingNames;
+            return this;
+        }
+        public BeanDefinition build() {
+            return new BeanDefinition(this);
+        }
     }
 
     @Override
@@ -43,7 +83,8 @@ public class BeanDefinition {
                 "beanClass=" + beanClass +
                 ", bindNames=" + bindNames +
                 ", injectedConstructor=" + injectedConstructor +
-                ", dependenciesToBindingNames=" + dependenciesToBindingNames +
+                ", parameterToBindingNames" + parameterToBindingNames +
+                ", fieldToBindingNames" + fieldToBindingNames +
                 '}';
     }
 }
