@@ -1,7 +1,7 @@
 package org.vivacon.framework.serialization.json.deserializer;
 
-import java.io.StringReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +44,12 @@ public class JsonLexer {
     public List<Token> tokenize() throws IOException {
         List<Token> tokens = new ArrayList<>();
         while (currentChar != -1) {
+            
+            if (currentChar == '\n') {
+                currentChar = reader.read();
+                continue;
+            }
+
             if (Character.isWhitespace(currentChar)) {
                 currentChar = reader.read();
                 continue;
@@ -137,7 +143,12 @@ public class JsonLexer {
             sb.append((char) currentChar);
             currentChar = reader.read();
         }
-        return sb.toString();
+
+        String value = sb.toString().toLowerCase();
+        if ("true".equals(value) || "false".equals(value)) {
+            return sb.toString();
+        }
+        throw new IllegalArgumentException(String.format("Having a unexpected value %s in json", value));
     }
 
     private String parseNull() throws IOException {
