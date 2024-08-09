@@ -1,6 +1,8 @@
 package org.vivacon.framework.serialization.json.deserializer.node;
 
-public class JsonBooleanNode extends JsonNode {
+import java.util.Objects;
+
+public class JsonBooleanNode implements JsonNode {
     private final boolean value;
 
     public JsonBooleanNode(boolean value) {
@@ -9,5 +11,18 @@ public class JsonBooleanNode extends JsonNode {
 
     public boolean getValue() {
         return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        JsonBooleanNode that = (JsonBooleanNode) o;
+        return value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 }

@@ -1,5 +1,7 @@
 package org.vivacon.framework.serialization.json.deserializer;
 
+import org.vivacon.framework.serialization.json.deserializer.JsonLexer.Token;
+import org.vivacon.framework.serialization.json.deserializer.JsonLexer.TokenType;
 import org.vivacon.framework.serialization.json.deserializer.node.JsonArrayNode;
 import org.vivacon.framework.serialization.json.deserializer.node.JsonBooleanNode;
 import org.vivacon.framework.serialization.json.deserializer.node.JsonNode;
@@ -7,18 +9,17 @@ import org.vivacon.framework.serialization.json.deserializer.node.JsonNullNode;
 import org.vivacon.framework.serialization.json.deserializer.node.JsonNumberNode;
 import org.vivacon.framework.serialization.json.deserializer.node.JsonObjectNode;
 import org.vivacon.framework.serialization.json.deserializer.node.JsonStringNode;
-import org.vivacon.framework.serialization.json.deserializer.JsonLexer.Token;
-import org.vivacon.framework.serialization.json.deserializer.JsonLexer.TokenType;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
 
 public class JsonParser {
-    private final List<Token> tokens;
+    private final ArrayList<Token> tokens;
     private int index = 0;
 
-    public JsonParser(List<Token> tokens) {
+    public JsonParser(ArrayList<Token> tokens) {
         this.tokens = tokens;
     }
 
@@ -39,8 +40,7 @@ public class JsonParser {
         if (token.type == TokenType.LEFT_BRACKET) {
             return parseArray();
         }
-
-        throw new Exception("Unexpected token: " + token);
+        return parseValue();
     }
 
     private JsonNode parseObject() throws Exception {
@@ -85,18 +85,28 @@ public class JsonParser {
         if (token.type == TokenType.STRING) {
             consumeToken();
             return new JsonStringNode(token.value);
-        } else if (token.type == TokenType.NUMBER) {
+        }
+
+        if (token.type == TokenType.NUMBER) {
             consumeToken();
             return new JsonNumberNode(Double.parseDouble(token.value));
-        } else if (token.type == TokenType.BOOLEAN) {
+        }
+
+        if (token.type == TokenType.BOOLEAN) {
             consumeToken();
             return new JsonBooleanNode(Boolean.parseBoolean(token.value));
-        } else if (token.type == TokenType.NULL) {
+        }
+
+        if (token.type == TokenType.NULL) {
             consumeToken();
-            return new JsonNullNode();
-        } else if (token.type == TokenType.LEFT_BRACE) {
+            return JsonNullNode.getInstance();
+        }
+
+        if (token.type == TokenType.LEFT_BRACE) {
             return parseObject();
-        } else if (token.type == TokenType.LEFT_BRACKET) {
+        }
+
+        if (token.type == TokenType.LEFT_BRACKET) {
             return parseArray();
         }
         throw new Exception("Unexpected token: " + token);

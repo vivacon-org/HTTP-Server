@@ -1,6 +1,8 @@
 package org.vivacon.framework.serialization.json.deserializer.node;
 
-public class JsonNumberNode extends JsonNode {
+import java.util.Objects;
+
+public class JsonNumberNode implements JsonNode {
     private final double value;
 
     public JsonNumberNode(double value) {
@@ -9,5 +11,18 @@ public class JsonNumberNode extends JsonNode {
 
     public double getValue() {
         return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        JsonNumberNode that = (JsonNumberNode) o;
+        return Double.compare(value, that.value) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 }

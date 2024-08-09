@@ -3,7 +3,6 @@ package org.vivacon.framework.serialization.json.deserializer;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.List;
 
 public class JsonLexer {
 
@@ -21,11 +20,6 @@ public class JsonLexer {
             this.type = type;
             this.value = value;
         }
-
-        @Override
-        public String toString() {
-            return type + " : " + value;
-        }
     }
 
     private final StringReader reader;
@@ -41,10 +35,10 @@ public class JsonLexer {
         this.currentChar = reader.read();
     }
 
-    public List<Token> tokenize() throws IOException {
-        List<Token> tokens = new ArrayList<>();
+    public ArrayList<Token> tokenize() throws IOException {
+        ArrayList<Token> tokens = new ArrayList<>();
         while (currentChar != -1) {
-            
+
             if (currentChar == '\n') {
                 currentChar = reader.read();
                 continue;

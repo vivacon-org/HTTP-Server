@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -183,27 +184,29 @@ public class JsonLexerTest {
                 "  \"nullField\": null\n" +
                 "}";
 
-        JsonLexer lexer = new JsonLexer(largeJson);
-        List<JsonLexer.Token> tokens = lexer.tokenize();
+        try (StringReader reader = new StringReader(largeJson)) {
+            JsonLexer lexer = new JsonLexer(reader);
+            List<JsonLexer.Token> tokens = lexer.tokenize();
 
-        Assertions.assertNotNull(tokens);
-        Assertions.assertFalse(tokens.isEmpty());
+            Assertions.assertNotNull(tokens);
+            Assertions.assertFalse(tokens.isEmpty());
 
-        // Validate a few specific tokens for correctness
-        assertEquals(JsonLexer.TokenType.LEFT_BRACE, tokens.get(0).type);
-        assertEquals("{", tokens.get(0).value);
+            // Validate a few specific tokens for correctness
+            assertEquals(JsonLexer.TokenType.LEFT_BRACE, tokens.get(0).type);
+            assertEquals("{", tokens.get(0).value);
 
-        assertEquals(JsonLexer.TokenType.STRING, tokens.get(1).type);
-        assertEquals("name", tokens.get(1).value);
+            assertEquals(JsonLexer.TokenType.STRING, tokens.get(1).type);
+            assertEquals("name", tokens.get(1).value);
 
-        assertEquals(JsonLexer.TokenType.COLON, tokens.get(2).type);
-        assertEquals(":", tokens.get(2).value);
+            assertEquals(JsonLexer.TokenType.COLON, tokens.get(2).type);
+            assertEquals(":", tokens.get(2).value);
 
-        assertEquals(JsonLexer.TokenType.STRING, tokens.get(3).type);
-        assertEquals("John", tokens.get(3).value);
+            assertEquals(JsonLexer.TokenType.STRING, tokens.get(3).type);
+            assertEquals("John", tokens.get(3).value);
 
-        assertEquals(JsonLexer.TokenType.RIGHT_BRACE, tokens.get(tokens.size() - 2).type);
-        // Check the EOF token
-        assertEquals(JsonLexer.TokenType.EOF, tokens.get(tokens.size() - 1).type);
+            assertEquals(JsonLexer.TokenType.RIGHT_BRACE, tokens.get(tokens.size() - 2).type);
+            // Check the EOF token
+            assertEquals(JsonLexer.TokenType.EOF, tokens.get(tokens.size() - 1).type);
+        }
     }
 }

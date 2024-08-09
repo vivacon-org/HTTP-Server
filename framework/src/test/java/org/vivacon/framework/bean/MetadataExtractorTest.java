@@ -1,10 +1,9 @@
 package org.vivacon.framework.bean;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions;
 import org.vivacon.framework.bean.annotations.Autowired;
-import org.vivacon.framework.bean.annotations.Component;
 import org.vivacon.framework.bean.annotations.Qualifier;
 import org.vivacon.framework.bean.annotations.Service;
 import org.vivacon.framework.web.annotations.Controller;
@@ -12,7 +11,11 @@ import org.vivacon.framework.web.annotations.Controller;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 class MetadataExtractorTest {
     private MetadataExtractor metadataExtractor;
