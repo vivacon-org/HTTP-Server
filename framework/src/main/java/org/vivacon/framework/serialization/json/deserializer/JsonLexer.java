@@ -1,6 +1,7 @@
 package org.vivacon.framework.serialization.json.deserializer;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 
@@ -22,7 +23,7 @@ public class JsonLexer {
         }
     }
 
-    private final StringReader reader;
+    private final Reader reader;
     private int currentChar;
 
     public JsonLexer(String input) throws IOException {
@@ -30,7 +31,7 @@ public class JsonLexer {
         this.currentChar = reader.read();
     }
 
-    public JsonLexer(StringReader input) throws IOException {
+    public JsonLexer(Reader input) throws IOException {
         this.reader = input;
         this.currentChar = reader.read();
     }
