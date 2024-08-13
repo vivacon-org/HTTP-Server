@@ -6,12 +6,11 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
+import java.net.JarURLConnection;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -29,9 +28,9 @@ public class ClassScanner {
         return INSTANCE;
     }
 
-    public List<Class<?>> scanClassesAnnotatedBy(Set<Class<? extends Annotation>> annotations) {
+    public List<Class<?>> scanClassesAnnotatedBy(Path scanningPath, Set<Class<? extends Annotation>> annotations) {
 
-        List<Class<?>> allClassesInClassPath = getAllClassesInClassPath();
+        List<Class<?>> allClassesInClassPath = getAllClassesInClassPath(scanningPath);
 
         List<Class<?>> manageBeanClasses = new LinkedList<>();
 
@@ -56,42 +55,33 @@ public class ClassScanner {
         return manageBeanClasses;
     }
 
-    public List<Class<?>> getAllClassesInClassPath() {
-        String classpath = System.getProperty("java.class.path");
-        String[] classpathEntries = classpath.split(File.pathSeparator);
+    public List<Class<?>> getAllClassesInClassPath(Path path) {
+        String packageName = this.getClass().getPackage().getName();
+        String packagePath = packageName.replace('.', '/');
 
-        List<File> classFiles = new ArrayList<>();
-        for (String entry : classpathEntries) {
-
-            File entryFile = new File(entry);
-
-            if (entryFile.isDirectory()) {
-
-                List<File> classesInDir = scanDirectory(entryFile);
-                classFiles.addAll(classesInDir);
-
-            } else if (entryFile.isFile() && entry.toLowerCase().endsWith(".jar")) {
-
-                List<File> classesInJar = scanJarFile(entryFile);
-                classFiles.addAll(classesInJar);
-            }
-        }
-
-        // Convert file paths to class names and load classes
         List<Class<?>> classes = new ArrayList<>();
-        for (File classFile : classFiles) {
 
-            String className = convertFileToClassName(classFile);
-            if (className == null) {
-                continue;
-            }
+        try {
+            Enumeration<URL> resources = this.getClass().getClassLoader().getResources(packagePath);
 
-            try {
-                Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(className);
-                classes.add(clazz);
-            } catch (ClassNotFoundException e) {
-                LOG.debug("Class not found of file {}", classFile);
+            while (resources.hasMoreElements()) {
+                URL resource = resources.nextElement();
+
+                if (resource.getProtocol().equals("file")) {
+                    // Handle directories
+                    File packageDirectory = new File(resource.toURI());
+                    List<File> classFiles = scanDirectory(packageDirectory);
+                    classes.addAll(convertFilesToClasses(classFiles, packageName));
+
+                } else if (resource.getProtocol().equals("jar")) {
+                    // Handle JAR files
+                    JarURLConnection jarConnection = (JarURLConnection) resource.openConnection();
+                    JarFile jarFile = jarConnection.getJarFile();
+                    classes.addAll(scanJarFile(jarFile, packagePath));
+                }
             }
+        } catch (IOException | URISyntaxException e) {
+            throw new RuntimeException("Failed to load classes from package: " + packageName, e);
         }
 
         return classes;
@@ -126,39 +116,57 @@ public class ClassScanner {
         return classFiles;
     }
 
-    public List<File> scanJarFile(File jarFile) {
-        List<File> classesInJar = new LinkedList<>();
-        try (JarFile jf = new JarFile(jarFile)) {
-            for (JarEntry entry : Collections.list(jf.entries())) {
-                if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
-                    File file = new File(entry.getName());
-                    classesInJar.add(file);
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private List<Class<?>> scanJarFile(JarFile jarFile, String packagePath) {
+        List<Class<?>> classes = new ArrayList<>();
+        String packagePrefix = packagePath + "/";
 
-        return classesInJar;
+        jarFile.stream()
+                .filter(entry -> !entry.isDirectory() && entry.getName().endsWith(".class") && entry.getName().startsWith(packagePrefix))
+                .map(entry -> convertJarEntryToClassName(entry, packagePath))
+                .forEach(className -> {
+                    try {
+                        classes.add(Class.forName(className));
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException("Class not found: " + className, e);
+                    }
+                });
+
+        return classes;
     }
 
-    private String convertFileToClassName(File classFile) {
-        String classpath = System.getProperty("java.class.path");
-        String pathToFile = classFile.getAbsolutePath();
+    private String convertJarEntryToClassName(JarEntry entry, String packagePath) {
+        String className = entry.getName().substring(packagePath.length() + 1, entry.getName().length() - 6);
+        return packagePath.replace('/', '.') + "." + className.replace('/', '.');
+    }
 
-        int classpathIndex = pathToFile.indexOf(classpath);
-        if (classpathIndex == -1) {
-            return null;
+    private List<Class<?>> convertFilesToClasses(List<File> classFiles, String packageName) {
+        List<Class<?>> classes = new ArrayList<>();
+        String packagePath = packageName.replace('.', '/');
+
+        // Get the base path for the package
+        String basePath;
+        try {
+            basePath = new File(this.getClass().getClassLoader().getResource(packagePath).toURI()).getPath();
+        } catch (URISyntaxException | NullPointerException e) {
+            throw new RuntimeException("Failed to locate the package path for package: " + packageName, e);
         }
+        for (File classFile : classFiles) {
+            String filePath = classFile.getPath();
 
-        String relativePath = pathToFile.substring(classpathIndex + classpath.length() + 1);
+            if (!filePath.startsWith(basePath)) {
+                continue;
+            }
 
-        // Remove the ".class" extension and replace file separators with dots
-        String className = relativePath.replace(File.separatorChar, '.');
-        if (className.endsWith(".class")) {
-            className = className.substring(0, className.length() - ".class".length());
+            String className = filePath.substring(basePath.length() + 1, filePath.length() - 6); // Remove base path and ".class"
+            className = packageName + "." + className.replace(File.separatorChar, '.');
+
+            try {
+                Class<?> clazz = Class.forName(className);
+                classes.add(clazz);
+            } catch (ClassNotFoundException e) {
+                LOG.debug("Class not found for file {}", classFile);
+            }
         }
-
-        return className;
+        return classes;
     }
 }

@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.vivacon.framework.bean.annotations.Autowired;
 import org.vivacon.framework.bean.annotations.Qualifier;
 import org.vivacon.framework.bean.annotations.Service;
+import org.vivacon.framework.core.event.ClearCacheEvent;
+import org.vivacon.framework.core.event.EventBroker;
+import org.vivacon.framework.core.event.EventListener;
 import org.vivacon.framework.web.annotations.Controller;
 
 import java.lang.reflect.Constructor;
@@ -24,9 +27,8 @@ class MetadataExtractorTest {
     public void setUp() {
         metadataExtractor = MetadataExtractor.getInstance();
         Set<String> predefinedBindings = new HashSet<>(Set.of("PredefinedClassName", "PredefinedInterfaceName"));
-        Map<Class<?>, Set<String>> predefinedCache = new HashMap<>();
-        predefinedCache.put(SchoolInCache.class, predefinedBindings);
-        metadataExtractor.setBeanClassToBindingNamesCache(predefinedCache);
+        EventBroker.getInstance().publish();
+        //put bean to cache
     }
 
     @Test
@@ -83,8 +85,6 @@ class MetadataExtractorTest {
 
     @Test
     public void test_getDependencyToItsBindName_fromCtor() throws NoSuchMethodException {
-        //lấy param của constructor và binding name của param
-        //ex: class School - construstor School(Clazz clazz, Student student) -> lấy binding name của Clazz, Student
         Constructor<?> constructor = SchoolController.class.getConstructor(ClazzService.class, StudentService.class, DepartmentService.class);
         Parameter paramClazz = constructor.getParameters()[0];
         Parameter paramStudent = constructor.getParameters()[1];
@@ -102,8 +102,6 @@ class MetadataExtractorTest {
 
     @Test
     public void test_getDependencyToItsBindName_fromFields() throws NoSuchFieldException {
-        //lấy field của class và binding name của field
-        //ex: class School - co field Clazz clazz, Student student -> lấy binding name của Clazz, Student
         Class<?> clazzController = SchoolController.class;
         Field fieldClazz = clazzController.getDeclaredFields()[0];
         Field fieldStudent = clazzController.getDeclaredFields()[1];
@@ -118,6 +116,43 @@ class MetadataExtractorTest {
         Assertions.assertEquals(expectBindingName, actualBindingName);
     }
 
+    @Test
+    public void test_buildBeanDefinitions() throws NoSuchMethodException {
+        List<Class<?>> componentClasses = Arrays.asList(SchoolController.class);
+
+        Map<Class<?>, BeanDefinition> expectedBeanDefinition =  new HashMap<>();
+
+        Constructor<?> constructor = SchoolController.class.getConstructor(ClazzService.class, StudentService.class, DepartmentService.class);
+        Parameter paramClazz = constructor.getParameters()[0];
+        Parameter paramStudent = constructor.getParameters()[1];
+        Parameter paramDepartment = constructor.getParameters()[2];
+        LinkedHashMap<Parameter, Set<String>> parameterSetLinkedHashMap = new LinkedHashMap<>();
+        parameterSetLinkedHashMap.put(paramClazz, new HashSet<>(Set.of("Class Service")));
+        parameterSetLinkedHashMap.put(paramStudent, new HashSet<>(Set.of("StudentService", "Student Service")));
+        parameterSetLinkedHashMap.put(paramDepartment, new HashSet<>(Set.of("DepartmentService")));
+
+
+        Class<?> clazzController = SchoolController.class;
+        Field fieldClazz = clazzController.getDeclaredFields()[0];
+        Field fieldStudent = clazzController.getDeclaredFields()[1];
+        Field fieldDepartment = clazzController.getDeclaredFields()[2];
+
+        LinkedHashMap<Field, Set<String>> fieldBindingName = new LinkedHashMap<>();
+        fieldBindingName.put(fieldClazz, new HashSet<>(Set.of("ClazzService")));
+        fieldBindingName.put(fieldStudent, new HashSet<>(Set.of("StudentService", "Student Service")));
+        fieldBindingName.put(fieldDepartment, new HashSet<>(Set.of("DepartmentService")));
+
+        BeanDefinition beanDefinition = new BeanDefinition.BeanDefinitionBuilder()
+                        .setBeanClass(SchoolController.class)
+                        .setBindNames(new HashSet<>(Set.of("SchoolController")))
+                        .setInjectedConstructor(constructor)
+                        .setFieldToBindingNames(fieldBindingName).build();
+
+        expectedBeanDefinition.put(SchoolController.class, beanDefinition );
+
+        Map<Class<?>, BeanDefinition> actualBeanDefinition = MetadataExtractor.getInstance().buildBeanDefinitions(componentClasses);
+        Assertions.assertEquals(expectedBeanDefinition, actualBeanDefinition);
+    }
 
     @Controller
     private static class SchoolController {

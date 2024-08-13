@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vivacon.framework.bean.annotations.Autowired;
 import org.vivacon.framework.bean.annotations.Qualifier;
+import org.vivacon.framework.core.event.Event;
+import org.vivacon.framework.core.event.EventListener;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -16,7 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class MetadataExtractor {
+public class MetadataExtractor implements EventListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(MetadataExtractor.class);
 
@@ -45,19 +47,19 @@ public class MetadataExtractor {
             Constructor<?> constructorToInject = getConstructorToInject(clazz);
             LinkedHashMap<Parameter, Set<String>> parameterToItsBindNames = getDependencyToItsBindNames(constructorToInject);
 
-            if (!parameterToItsBindNames.isEmpty()) {
-                new BeanDefinition.BeanDefinitionBuilder()
+            if (parameterToItsBindNames.isEmpty()) {
+                LinkedHashMap<Field, Set<String>> fieldToItsBindNames = getDependencyToItsBindNames(clazz);
+                classToBeanDefinition.put(clazz, new BeanDefinition.BeanDefinitionBuilder()
                         .setBeanClass(clazz)
                         .setBindNames(beanBindingNames)
                         .setInjectedConstructor(constructorToInject)
-                        .setParameterToBindingNames(parameterToItsBindNames).build();
+                        .setFieldToBindingNames(fieldToItsBindNames).build());
             }
-            LinkedHashMap<Field, Set<String>> fieldToItsBindNames = getDependencyToItsBindNames(clazz);
             classToBeanDefinition.put(clazz, new BeanDefinition.BeanDefinitionBuilder()
                     .setBeanClass(clazz)
                     .setBindNames(beanBindingNames)
                     .setInjectedConstructor(constructorToInject)
-                    .setFieldToBindingNames(fieldToItsBindNames).build());
+                    .setParameterToBindingNames(parameterToItsBindNames).build());
         }
         return classToBeanDefinition;
     }
@@ -153,5 +155,10 @@ public class MetadataExtractor {
         }
 
         throw new IllegalArgumentException(String.format("The class %s has many constructor but no one was annotated by Autowired to specify which the dependencies to inject to the bean", beanClazz));
+    }
+
+    @Override
+    public void handleEvent(Event receiveEvent) {
+
     }
 }

@@ -1,4 +1,4 @@
-package org.vivacon.demo;
+package org.vivacon.demo.service;
 
 
 import org.vivacon.framework.bean.annotations.Component;

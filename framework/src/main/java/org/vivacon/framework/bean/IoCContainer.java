@@ -6,6 +6,7 @@ import org.vivacon.framework.core.ClassScanner;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,11 +22,13 @@ public class IoCContainer {
     private final BeanFactory beanFactory;
     private final BeansInitiationOrderResolver resolver;
     private final Set<Class<? extends Annotation>> managedAnnotations;
+    private final Path scanningPath;
 
     public IoCContainer(ClassScanner classScanner,
                         MetadataExtractor metadataExtractor,
                         BeanFactory beanFactory,
                         BeansInitiationOrderResolver resolver,
+                        Path scanningPath,
                         Set<Class<? extends Annotation>> managedAnnotations) {
         this.clazzToBean = new HashMap<>();
         this.bindNameToBeans = new HashMap<>();
@@ -33,11 +36,12 @@ public class IoCContainer {
         this.metadataExtractor = metadataExtractor;
         this.beanFactory = beanFactory;
         this.resolver = resolver;
+        this.scanningPath = scanningPath;
         this.managedAnnotations = managedAnnotations;
     }
 
-    public Map<Class<?>, Object> loadBeans(){
-        List<Class<?>> componentClasses = classScanner.scanClassesAnnotatedBy(managedAnnotations);
+    public Map<Class<?>, Object> loadBeans() {
+        List<Class<?>> componentClasses = classScanner.scanClassesAnnotatedBy(scanningPath, managedAnnotations);
 
         Map<Class<?>, BeanDefinition> beanDefinitionMap = metadataExtractor.buildBeanDefinitions(componentClasses);
 
@@ -74,7 +78,7 @@ public class IoCContainer {
 
     public Object getBean(Class<?> beanClass) {
 
-        if(clazzToBean.isEmpty()){
+        if (clazzToBean.isEmpty()) {
             Map<Class<?>, Object> loadedBeans = loadBeans();
             this.clazzToBean.putAll(loadedBeans);
         }
@@ -82,9 +86,9 @@ public class IoCContainer {
         return clazzToBean.get(beanClass);
     }
 
-    public Set<Object> getBeans(String bindName){
+    public Set<Object> getBeans(String bindName) {
 
-        if(clazzToBean.isEmpty()){
+        if (clazzToBean.isEmpty()) {
             Map<Class<?>, Object> loadedBeans = loadBeans();
             this.clazzToBean.putAll(loadedBeans);
         }
