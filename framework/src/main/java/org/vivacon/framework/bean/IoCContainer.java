@@ -1,7 +1,13 @@
 package org.vivacon.framework.bean;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vivacon.framework.bean.annotations.PostConstruct;
 import org.vivacon.framework.core.ClassScanner;
+import org.vivacon.framework.core.event.ClearCacheEvent;
+import org.vivacon.framework.core.event.Event;
+import org.vivacon.framework.core.event.EventBroker;
+import org.vivacon.framework.core.event.EventListener;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -14,7 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class IoCContainer {
+import static org.gradle.internal.impldep.org.testng.CommandLineArgs.LOG;
+
+public class IoCContainer implements EventListener {
     private final Map<Class<?>, Object> clazzToBean;
     private final Map<String, Set<Object>> bindNameToBeans;
     private final ClassScanner classScanner;
@@ -23,6 +31,8 @@ public class IoCContainer {
     private final BeansInitiationOrderResolver resolver;
     private final Set<Class<? extends Annotation>> managedAnnotations;
     private final Path scanningPath;
+
+    private static final Logger LOG = LoggerFactory.getLogger(IoCContainer.class);
 
     public IoCContainer(ClassScanner classScanner,
                         MetadataExtractor metadataExtractor,
@@ -38,6 +48,8 @@ public class IoCContainer {
         this.resolver = resolver;
         this.scanningPath = scanningPath;
         this.managedAnnotations = managedAnnotations;
+        EventBroker.getInstance().register(ClearCacheEvent.class, this);
+//        EventBroker.getInstance().register(ClearCacheEvent.class, this, handleEvent(ClearCacheEvent.class));
     }
 
     public Map<Class<?>, Object> loadBeans() {
@@ -107,6 +119,13 @@ public class IoCContainer {
             }
         } catch (InvocationTargetException | IllegalAccessException e) {
             // no op
+        }
+    }
+
+    @Override
+    public void handleEvent(Event event) {
+        if (event instanceof  ClearCacheEvent){
+            LOG.info("Clear cache in IoCContainer");
         }
     }
 }

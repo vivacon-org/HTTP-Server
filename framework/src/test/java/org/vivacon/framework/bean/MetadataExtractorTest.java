@@ -8,17 +8,12 @@ import org.vivacon.framework.bean.annotations.Qualifier;
 import org.vivacon.framework.bean.annotations.Service;
 import org.vivacon.framework.core.event.ClearCacheEvent;
 import org.vivacon.framework.core.event.EventBroker;
-import org.vivacon.framework.core.event.EventListener;
 import org.vivacon.framework.web.annotations.Controller;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 class MetadataExtractorTest {
     private MetadataExtractor metadataExtractor;
@@ -26,9 +21,9 @@ class MetadataExtractorTest {
     @BeforeEach
     public void setUp() {
         metadataExtractor = MetadataExtractor.getInstance();
+        ClearCacheEvent clearCacheEvent = new ClearCacheEvent();
+        EventBroker.getInstance().publish(clearCacheEvent);
         Set<String> predefinedBindings = new HashSet<>(Set.of("PredefinedClassName", "PredefinedInterfaceName"));
-        EventBroker.getInstance().publish();
-        //put bean to cache
     }
 
     @Test

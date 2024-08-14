@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vivacon.framework.bean.annotations.Autowired;
 import org.vivacon.framework.bean.annotations.Qualifier;
+import org.vivacon.framework.core.event.ClearCacheEvent;
 import org.vivacon.framework.core.event.Event;
+import org.vivacon.framework.core.event.EventBroker;
 import org.vivacon.framework.core.event.EventListener;
 
 import java.lang.reflect.Constructor;
@@ -25,14 +27,11 @@ public class MetadataExtractor implements EventListener {
     private final Map<Class<?>, Set<String>> beanClassToBindingNamesCache;
 
     private MetadataExtractor() {
+        EventBroker.getInstance().register(ClearCacheEvent.class, this);
+//        EventBroker.getInstance().register(ClearCacheEvent.class, this, handleEvent(ClearCacheEvent.class));
         beanClassToBindingNamesCache = new HashMap<>();
-        // Private constructor to prevent instantiation
     }
 
-    public void setBeanClassToBindingNamesCache(Map<Class<?>, Set<String>> cache) {
-        beanClassToBindingNamesCache.clear();
-        beanClassToBindingNamesCache.putAll(cache);
-    }
     private static final MetadataExtractor INSTANCE = new MetadataExtractor();
 
     public static MetadataExtractor getInstance() {
@@ -159,6 +158,8 @@ public class MetadataExtractor implements EventListener {
 
     @Override
     public void handleEvent(Event receiveEvent) {
-
+        if (receiveEvent instanceof ClearCacheEvent) {
+            beanClassToBindingNamesCache.clear();
+        }
     }
 }
