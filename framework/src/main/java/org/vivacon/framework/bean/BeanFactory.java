@@ -24,6 +24,27 @@ public class BeanFactory {
         return INSTANCE;
     }
 
+    /**
+     * Creates and returns an instance of a bean based on the provided {@link BeanDefinition}.
+     *
+     * <p>This method performs the following operations:
+     * <ul>
+     *   <li>Checks if an instance of the bean class already exists in the {@code clazzToBean} map. If it does,
+     *   it returns the existing instance.</li>
+     *   <li>If the bean has a constructor with parameters, it resolves the dependencies using
+     *   {@link #populateDependencies} and uses them to create the bean instance.</li>
+     *   <li>If the constructor has no parameters, it creates the bean instance and injects the dependencies
+     *   directly into the fields of the bean class.</li>
+     *   <li>If the bean creation fails due to reflection errors, a {@link RuntimeException} is thrown.</li>
+     * </ul>
+     *
+     * @param beanDefinition the {@link BeanDefinition} containing metadata about the bean class, constructor,
+     *                       and field dependencies.
+     * @param clazzToBean a map that holds existing bean instances, keyed by their class type.
+     * @param bindNameToBeans a map that holds sets of beans, keyed by binding names, to resolve dependencies.
+     * @return the created bean instance.
+     * @throws RuntimeException if the bean cannot be created due to reflection issues.
+     */
     public Object createBean(BeanDefinition beanDefinition,
                              Map<Class<?>, Object> clazzToBean,
                              Map<String, Set<Object>> bindNameToBeans) {
@@ -60,6 +81,23 @@ public class BeanFactory {
         }
     }
 
+
+    /**
+     * Resolves and returns an array of dependencies based on the provided mapping of fields to binding names.
+     *
+     * <p>This method iterates through the fields and their associated binding names, attempting to find the
+     * appropriate bean from the provided {@code bindNameToBeans} map. If a matching bean is found, it is added
+     * to the dependencies array. If no matching bean is found, the corresponding array slot remains null.
+     *
+     * @param dependencyToItsBindNames a {@link LinkedHashMap} where each key is a {@link Field} that requires
+     *                                 a dependency, and each value is a {@link Set} of binding names that can
+     *                                 be used to resolve the dependency.
+     * @param bindNameToBeans a {@link Map} where the keys are binding names and the values are {@link Set}s of
+     *                        beans associated with those binding names.
+     * @return an array of {@link Object} instances representing the resolved dependencies. The array's order
+     *         corresponds to the order of fields in the {@code dependencyToItsBindNames} map.
+     *         If a dependency could not be resolved, the corresponding array element will be {@code null}.
+     */
     private Object[] populateDependencies(LinkedHashMap<Field, Set<String>> dependencyToItsBindNames,
                                           Map<String, Set<Object>> bindNameToBeans) {
 

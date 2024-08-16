@@ -28,7 +28,6 @@ public class MetadataExtractor implements EventListener {
 
     private MetadataExtractor() {
         EventBroker.getInstance().register(ClearCacheEvent.class, this);
-//        EventBroker.getInstance().register(ClearCacheEvent.class, this, handleEvent(ClearCacheEvent.class));
         beanClassToBindingNamesCache = new HashMap<>();
     }
 
@@ -38,6 +37,13 @@ public class MetadataExtractor implements EventListener {
         return INSTANCE;
     }
 
+    @Override
+    public void handleEvent(Event receiveEvent) {
+        if (receiveEvent instanceof ClearCacheEvent) {
+            beanClassToBindingNamesCache.clear();
+        }
+    }
+
     public Map<Class<?>, BeanDefinition> buildBeanDefinitions(List<Class<?>> componentClasses) {
         Map<Class<?>, BeanDefinition> classToBeanDefinition = new HashMap<>();
 
@@ -45,9 +51,9 @@ public class MetadataExtractor implements EventListener {
             Set<String> beanBindingNames = getBeanBindingName(clazz);
             Constructor<?> constructorToInject = getConstructorToInject(clazz);
             LinkedHashMap<Parameter, Set<String>> parameterToItsBindNames = getDependencyToItsBindNames(constructorToInject);
+            LinkedHashMap<Field, Set<String>> fieldToItsBindNames = getDependencyToItsBindNames(clazz);
 
             if (parameterToItsBindNames.isEmpty()) {
-                LinkedHashMap<Field, Set<String>> fieldToItsBindNames = getDependencyToItsBindNames(clazz);
                 classToBeanDefinition.put(clazz, new BeanDefinition.BeanDefinitionBuilder()
                         .setBeanClass(clazz)
                         .setBindNames(beanBindingNames)
@@ -58,7 +64,9 @@ public class MetadataExtractor implements EventListener {
                     .setBeanClass(clazz)
                     .setBindNames(beanBindingNames)
                     .setInjectedConstructor(constructorToInject)
-                    .setParameterToBindingNames(parameterToItsBindNames).build());
+                    .setParameterToBindingNames(parameterToItsBindNames)
+                    .setFieldToBindingNames(fieldToItsBindNames).build());
+
         }
         return classToBeanDefinition;
     }
@@ -154,12 +162,5 @@ public class MetadataExtractor implements EventListener {
         }
 
         throw new IllegalArgumentException(String.format("The class %s has many constructor but no one was annotated by Autowired to specify which the dependencies to inject to the bean", beanClazz));
-    }
-
-    @Override
-    public void handleEvent(Event receiveEvent) {
-        if (receiveEvent instanceof ClearCacheEvent) {
-            beanClassToBindingNamesCache.clear();
-        }
     }
 }

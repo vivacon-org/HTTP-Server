@@ -29,7 +29,7 @@ class MetadataExtractorTest {
     @Test
     public void test_getConstructorToInject_defaultCtor() throws NoSuchMethodException {
         Class<?> clazz = SchoolController_DefaultCtor.class;
-        Constructor<?> actualCtor = MetadataExtractor.getInstance().getConstructorToInject(clazz);
+        Constructor<?> actualCtor = metadataExtractor.getConstructorToInject(clazz);
         Constructor<?> expectedCtor = clazz.getDeclaredConstructor();
         Assertions.assertEquals(actualCtor, expectedCtor);
     }
@@ -37,7 +37,7 @@ class MetadataExtractorTest {
     @Test
     public void test_getConstructorToInject_onlyOneCtor() throws NoSuchMethodException {
         Class<?> clazz = SchoolController_OnlyOneCtor.class;
-        Constructor<?> actualCtor = MetadataExtractor.getInstance().getConstructorToInject(clazz);
+        Constructor<?> actualCtor = metadataExtractor.getConstructorToInject(clazz);
         Constructor<?> expectedCtor = clazz.getDeclaredConstructor(ClazzService.class, StudentService.class);
         Assertions.assertEquals(actualCtor, expectedCtor);
     }
@@ -45,7 +45,7 @@ class MetadataExtractorTest {
     @Test
     public void test_getConstructorToInject_manyCtorsWithOneAutowired() throws NoSuchMethodException {
         Class<?> clazz = SchoolController_ManyCtorsWithOneAutowired.class;
-        Constructor<?> actualCtor = MetadataExtractor.getInstance().getConstructorToInject(clazz);
+        Constructor<?> actualCtor = metadataExtractor.getConstructorToInject(clazz);
         Constructor<?> expectedCtor = clazz.getDeclaredConstructor(ClazzService.class, StudentService.class);
         Assertions.assertEquals(actualCtor, expectedCtor);
     }
@@ -59,14 +59,14 @@ class MetadataExtractorTest {
     @Test
     public void test_getBeanBindingName_withCache() {
         Set<String> expectBindingName = new HashSet<>(Set.of("PredefinedClassName", "PredefinedInterfaceName"));
-        Set<String> actualBindingName = MetadataExtractor.getInstance().getBeanBindingName(SchoolInCache.class);
+        Set<String> actualBindingName = metadataExtractor.getBeanBindingName(SchoolInCache.class);
         Assertions.assertEquals(expectBindingName, actualBindingName);
     }
 
     @Test
     public void test_getBeanBindingName_withInterface() {
         Set<String> expectBindingName = new HashSet<>(Set.of("SchoolImpl", "School"));
-        Set<String> actualBindingName = MetadataExtractor.getInstance().getBeanBindingName(SchoolImpl.class);
+        Set<String> actualBindingName = metadataExtractor.getBeanBindingName(SchoolImpl.class);
         Assertions.assertEquals(expectBindingName, actualBindingName);
     }
 
@@ -74,7 +74,7 @@ class MetadataExtractorTest {
     public void test_getBeanBindingName_withQualifiers() {
         // Predefine cache values
         Set<String> expectBindingName = new HashSet<>(Set.of("School Qualifier", "School", "SchoolQualifer"));
-        Set<String> actualBindingName = MetadataExtractor.getInstance().getBeanBindingName(SchoolQualifer.class);
+        Set<String> actualBindingName = metadataExtractor.getBeanBindingName(SchoolQualifer.class);
         Assertions.assertEquals(expectBindingName, actualBindingName);
     }
 

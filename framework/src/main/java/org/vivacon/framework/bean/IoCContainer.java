@@ -25,6 +25,7 @@ import static org.gradle.internal.impldep.org.testng.CommandLineArgs.LOG;
 public class IoCContainer implements EventListener {
     private final Map<Class<?>, Object> clazzToBean;
     private final Map<String, Set<Object>> bindNameToBeans;
+    private final Map<Class<?>, BeanDefinition> beanClazzToDefinition;
     private final ClassScanner classScanner;
     private final MetadataExtractor metadataExtractor;
     private final BeanFactory beanFactory;
@@ -42,6 +43,7 @@ public class IoCContainer implements EventListener {
                         Set<Class<? extends Annotation>> managedAnnotations) {
         this.clazzToBean = new HashMap<>();
         this.bindNameToBeans = new HashMap<>();
+        this.beanClazzToDefinition = new HashMap<>();
         this.classScanner = classScanner;
         this.metadataExtractor = metadataExtractor;
         this.beanFactory = beanFactory;
@@ -49,20 +51,27 @@ public class IoCContainer implements EventListener {
         this.scanningPath = scanningPath;
         this.managedAnnotations = managedAnnotations;
         EventBroker.getInstance().register(ClearCacheEvent.class, this);
-//        EventBroker.getInstance().register(ClearCacheEvent.class, this, handleEvent(ClearCacheEvent.class));
+    }
+
+    @Override
+    public void handleEvent(Event event) {
+        if (event instanceof  ClearCacheEvent){
+            LOG.info("Clear cache in IoCContainer");
+        }
     }
 
     public Map<Class<?>, Object> loadBeans() {
         List<Class<?>> componentClasses = classScanner.scanClassesAnnotatedBy(scanningPath, managedAnnotations);
 
-        Map<Class<?>, BeanDefinition> beanDefinitionMap = metadataExtractor.buildBeanDefinitions(componentClasses);
+        Map<Class<?>, BeanDefinition> beanClazzToDefinition = metadataExtractor.buildBeanDefinitions(componentClasses);
+        this.beanClazzToDefinition.putAll(beanClazzToDefinition);
 
         // initialize beans in order
-        List<Class<?>> correctOrderForInitializingBeans = resolver.resolveOrder(beanDefinitionMap);
+        List<Class<?>> correctOrderForInitializingBeans = resolver.resolveOrder(beanClazzToDefinition);
 
         for (Class<?> clazz : correctOrderForInitializingBeans) {
 
-            BeanDefinition beanDefinition = beanDefinitionMap.get(clazz);
+            BeanDefinition beanDefinition = beanClazzToDefinition.get(clazz);
             Object bean = beanFactory.createBean(beanDefinition,
                     Collections.unmodifiableMap(clazzToBean),
                     Collections.unmodifiableMap(bindNameToBeans));
@@ -99,13 +108,16 @@ public class IoCContainer implements EventListener {
     }
 
     public Set<Object> getBeans(String bindName) {
-
         if (clazzToBean.isEmpty()) {
             Map<Class<?>, Object> loadedBeans = loadBeans();
             this.clazzToBean.putAll(loadedBeans);
         }
 
         return Collections.unmodifiableSet(bindNameToBeans.get(bindName));
+    }
+
+    public Map<Class<?>, BeanDefinition> getBeanClazzToDefinition() {
+        return beanClazzToDefinition;
     }
 
     private void invokePostConstructHook(Object bean) {
@@ -119,13 +131,6 @@ public class IoCContainer implements EventListener {
             }
         } catch (InvocationTargetException | IllegalAccessException e) {
             // no op
-        }
-    }
-
-    @Override
-    public void handleEvent(Event event) {
-        if (event instanceof  ClearCacheEvent){
-            LOG.info("Clear cache in IoCContainer");
         }
     }
 }

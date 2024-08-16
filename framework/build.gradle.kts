@@ -12,6 +12,7 @@ val libs: VersionCatalog = extensions.getByType<VersionCatalogsExtension>().name
 
 dependencies {
     implementation(libs.findBundle("commonCompile").get())
+    implementation(libs.findBundle("servletAPI").get())
     testImplementation(libs.findBundle("testCompile").get())
 }
 
