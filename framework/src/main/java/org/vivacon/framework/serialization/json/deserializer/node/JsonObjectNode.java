@@ -14,6 +14,10 @@ public class JsonObjectNode implements JsonNode {
         return fields;
     }
 
+    public JsonNode getField(String fieldName) {
+        return fields.get(fieldName);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -25,5 +29,20 @@ public class JsonObjectNode implements JsonNode {
     @Override
     public int hashCode() {
         return Objects.hash(fields);
+    }
+
+    @Override
+    public String asText() {
+        throw new RuntimeException("Not implemented");
+    }
+
+    @Override
+    public boolean isArray() {
+        return false;
+    }
+
+    @Override
+    public boolean isObject() {
+        return true;
     }
 }

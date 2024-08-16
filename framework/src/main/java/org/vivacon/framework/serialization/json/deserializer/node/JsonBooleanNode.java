@@ -25,4 +25,19 @@ public class JsonBooleanNode implements JsonNode {
     public int hashCode() {
         return Objects.hash(value);
     }
+
+    @Override
+    public String asText() {
+        return String.valueOf(value);
+    }
+
+    @Override
+    public boolean isArray() {
+        return false;
+    }
+
+    @Override
+    public boolean isObject() {
+        return false;
+    }
 }

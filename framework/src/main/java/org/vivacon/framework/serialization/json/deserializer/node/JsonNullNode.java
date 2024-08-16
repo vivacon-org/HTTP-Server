@@ -10,4 +10,19 @@ public class JsonNullNode implements JsonNode {
     public static JsonNullNode getInstance() {
         return INSTANCE;
     }
+
+    @Override
+    public String asText() {
+        throw new RuntimeException("Not implemented");
+    }
+
+    @Override
+    public boolean isArray() {
+        return false;
+    }
+
+    @Override
+    public boolean isObject() {
+        return false;
+    }
 }
