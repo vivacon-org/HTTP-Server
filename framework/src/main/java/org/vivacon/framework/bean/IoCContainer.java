@@ -56,7 +56,9 @@ public class IoCContainer implements EventListener {
     @Override
     public void handleEvent(Event event) {
         if (event instanceof  ClearCacheEvent){
-            LOG.info("Clear cache in IoCContainer");
+            clazzToBean.clear();
+            bindNameToBeans.clear();
+            beanClazzToDefinition.clear();
         }
     }
 

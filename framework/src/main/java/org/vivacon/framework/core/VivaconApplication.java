@@ -4,9 +4,12 @@ import kotlin.reflect.jvm.internal.impl.descriptors.annotations.Annotated;
 import org.vivacon.framework.bean.*;
 import org.vivacon.framework.bean.annotations.Component;
 import org.vivacon.framework.bean.annotations.Service;
+import org.vivacon.framework.core.event.Event;
+import org.vivacon.framework.core.event.EventBroker;
 import org.vivacon.framework.web.annotations.Controller;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -34,7 +37,8 @@ public class VivaconApplication {
 
             IoCContainer ioCContainer = new IoCContainer(ClassScanner.getInstance(), MetadataExtractor.getInstance(), BeanFactory.getInstance(), BeansInitiationOrderResolver.getInstance(), scanningPath, managedAnnotations);
             ioCContainer.loadBeans();
-            Map<Class<?>, BeanDefinition> beanClazzToDefinition = ioCContainer.getBeanClazzToDefinition();
+
+            // TODO: register methods annotated @EventListener - get via output of MetadataExtractor, field of BeanDefinition
 
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
