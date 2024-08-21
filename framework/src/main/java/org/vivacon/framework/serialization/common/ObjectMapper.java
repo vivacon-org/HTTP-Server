@@ -1,10 +1,10 @@
-package org.vivacon.framework.serialization;
+package org.vivacon.framework.serialization.common;
 
 import org.vivacon.framework.serialization.json.deserializer.node.JsonNode;
 
 import java.io.Reader;
 
-public class ObjectMapper implements Serializer, Deserializer{
+public abstract class ObjectMapper implements Serializer, Deserializer {
 
     private final Serializer standardJsonSerializer;
     private final Deserializer standardJsonDeserializer;
@@ -16,18 +16,8 @@ public class ObjectMapper implements Serializer, Deserializer{
     }
 
     @Override
-    public Object deserialize(String serializedString) {
-        return standardJsonDeserializer.deserialize(serializedString);
-    }
-
-    @Override
     public <T> T deserialize(String serializedString, Class<? extends T> expectedClass) {
         return standardJsonDeserializer.deserialize(serializedString, expectedClass);
-    }
-
-    @Override
-    public Object deserialize(Reader inputReader) {
-        return standardJsonDeserializer.deserialize(inputReader);
     }
 
     @Override
@@ -40,12 +30,12 @@ public class ObjectMapper implements Serializer, Deserializer{
         return standardJsonSerializer.serialize(obj, gen);
     }
 
-    public JsonNode readTree(Reader inputReader){
+    public JsonNode readTree(Reader inputReader) {
         // TODO
         return null;
     }
 
-    public JsonNode readTree(String inputReader){
+    public JsonNode readTree(String inputReader) {
         // TODO
         return null;
     }

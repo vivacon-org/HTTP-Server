@@ -1,4 +1,4 @@
-package org.vivacon.framework.serialization;
+package org.vivacon.framework.serialization.common;
 
 public interface StrGenerator {
 

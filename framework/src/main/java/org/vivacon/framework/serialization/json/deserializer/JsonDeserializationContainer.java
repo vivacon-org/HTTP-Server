@@ -1,6 +1,6 @@
 package org.vivacon.framework.serialization.json.deserializer;
 
-import org.vivacon.framework.serialization.Deserializer;
+import org.vivacon.framework.serialization.common.Deserializer;
 import org.vivacon.framework.serialization.json.deserializer.node.JsonNode;
 
 import java.io.IOException;
@@ -8,7 +8,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 
-public class JsonDeserializerContainer implements Deserializer {
+public class JsonDeserializationContainer implements Deserializer {
 
     @Override
     public <T> T deserialize(String serializedString, Class<? extends T> expectedClass) {

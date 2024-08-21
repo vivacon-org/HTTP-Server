@@ -1,59 +1,61 @@
 package org.vivacon.framework.serialization.json.serializer;
 
-import org.vivacon.framework.serialization.StrGenerator;
+import org.vivacon.framework.serialization.common.StrGenerator;
 
+import java.io.IOException;
 import java.io.StringWriter;
+import java.io.Writer;
 
 public class JsonGenerator implements Cloneable, StrGenerator {
-    private StringWriter writer;
-
-    public JsonGenerator() {
-        writer = new StringWriter();
-    }
+    private Writer writer;
 
     public JsonGenerator(String initialStr) {
         writer = new StringWriter();
-        writer.append(initialStr);
+        append(initialStr);
+    }
+
+    public JsonGenerator(Writer writer) {
+        this.writer = writer;
     }
 
     @Override
     public void writeStartObject() {
-        writer.write("{");
+        write("{");
     }
 
     @Override
     public void writeEndObject() {
-        writer.write("}");
+        write("}");
     }
 
     @Override
     public void writeFieldName(String name) {
-        writer.write("\"" + name + "\":");
+        write("\"" + name + "\":");
     }
 
     @Override
     public void writeString(String value) {
-        writer.write("\"" + value + "\"");
+        write("\"" + value + "\"");
     }
 
     @Override
     public void writeNumber(Number value) {
-        writer.write(value.toString());
+        write(value.toString());
     }
 
     @Override
     public void writeNull() {
-        writer.write("null");
+        write("null");
     }
 
     @Override
     public void writeSeparator() {
-        writer.write(",");
+        write(",");
     }
 
     @Override
     public void writeNextLine() {
-        writer.write("\n");
+        write("\n");
     }
 
     @Override
@@ -68,8 +70,24 @@ public class JsonGenerator implements Cloneable, StrGenerator {
             cloned.writer = new StringWriter();
             cloned.writer.append(this.writer.toString());
             return cloned;
-        } catch (CloneNotSupportedException e) {
+        } catch (CloneNotSupportedException | IOException e) {
             throw new AssertionError("Cloning not supported", e);
+        }
+    }
+
+    private void append(String str) {
+        try {
+            writer = writer.append(str);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void write(String str) {
+        try {
+            writer.write(str);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
