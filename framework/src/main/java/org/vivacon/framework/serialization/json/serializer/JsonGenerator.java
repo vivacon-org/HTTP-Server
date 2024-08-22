@@ -1,5 +1,6 @@
 package org.vivacon.framework.serialization.json.serializer;
 
+import org.vivacon.framework.serialization.common.ResourceCleaner;
 import org.vivacon.framework.serialization.common.StrGenerator;
 
 import java.io.IOException;
@@ -12,10 +13,12 @@ public class JsonGenerator implements Cloneable, StrGenerator {
     public JsonGenerator(String initialStr) {
         writer = new StringWriter();
         append(initialStr);
+        ResourceCleaner.register(this, writer);
     }
 
     public JsonGenerator(Writer writer) {
         this.writer = writer;
+        ResourceCleaner.register(this, writer);
     }
 
     @Override

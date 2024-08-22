@@ -1,5 +1,7 @@
 package org.vivacon.framework.serialization.json.deserializer;
 
+import org.vivacon.framework.serialization.common.ResourceCleaner;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -29,11 +31,13 @@ public class JsonLexer {
     public JsonLexer(String input) throws IOException {
         this.reader = new StringReader(input);
         this.currentChar = reader.read();
+        ResourceCleaner.register(this, reader);
     }
 
     public JsonLexer(Reader input) throws IOException {
         this.reader = input;
         this.currentChar = reader.read();
+        ResourceCleaner.register(this, reader);
     }
 
     public ArrayList<Token> tokenize() throws IOException {
