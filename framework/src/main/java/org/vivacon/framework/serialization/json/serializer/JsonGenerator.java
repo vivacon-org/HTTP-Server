@@ -50,6 +50,24 @@ public class JsonGenerator implements Cloneable, StrGenerator {
     }
 
     @Override
+    public void writeStartArray() {
+        write("[");
+        increaseIndent();
+        if (features.shouldPrintPrettyJson()) {
+            writeNextLine();
+        }
+    }
+
+    @Override
+    public void writeEndArray() {
+        decreaseIndent();
+        if (features.shouldPrintPrettyJson()) {
+            writeNextLine();
+        }
+        write("]");
+    }
+
+    @Override
     public void writeFieldName(String name) {
         if (features.shouldPrintPrettyJson()) {
             writeIndentation();

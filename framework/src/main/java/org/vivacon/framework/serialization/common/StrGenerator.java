@@ -19,4 +19,8 @@ public interface StrGenerator {
     void writeNextLine();
 
     String generateString();
+
+    void writeStartArray();
+    
+    void writeEndArray();
 }
