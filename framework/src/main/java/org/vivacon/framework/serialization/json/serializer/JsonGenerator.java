@@ -9,16 +9,21 @@ import java.io.Writer;
 
 public class JsonGenerator implements Cloneable, StrGenerator {
     private Writer writer;
+    private JsonSerializationFeatures features;
 
-    public JsonGenerator(String initialStr) {
-        writer = new StringWriter();
-        append(initialStr);
+    public JsonGenerator(Writer writer, JsonSerializationFeatures features) {
+        this.writer = writer;
+        this.features = features;
         ResourceCleaner.register(this, writer);
     }
 
-    public JsonGenerator(Writer writer) {
-        this.writer = writer;
-        ResourceCleaner.register(this, writer);
+    public JsonGenerator(String initialStr, JsonSerializationFeatures features) {
+        this(new StringWriter(), features);
+        append(initialStr);
+    }
+
+    public JsonGenerator(JsonSerializationFeatures features) {
+        this(new StringWriter(), features);
     }
 
     @Override
@@ -93,4 +98,6 @@ public class JsonGenerator implements Cloneable, StrGenerator {
             throw new RuntimeException(e);
         }
     }
+
+
 }

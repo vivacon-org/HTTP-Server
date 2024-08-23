@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.gradle.internal.impldep.org.testng.CommandLineArgs.LOG;
-
 public class IoCContainer implements EventListener {
     private final Map<Class<?>, Object> clazzToBean;
     private final Map<String, Set<Object>> bindNameToBeans;
@@ -55,7 +53,7 @@ public class IoCContainer implements EventListener {
 
     @Override
     public void handleEvent(Event event) {
-        if (event instanceof  ClearCacheEvent){
+        if (event instanceof ClearCacheEvent) {
             clazzToBean.clear();
             bindNameToBeans.clear();
             beanClazzToDefinition.clear();

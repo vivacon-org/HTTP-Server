@@ -5,8 +5,9 @@ import org.slf4j.LoggerFactory;
 import org.vivacon.framework.serialization.common.StrGenerator;
 
 import java.lang.reflect.Field;
+import java.util.Optional;
 
-public class StdJsonSerializer implements JsonSerializer<Object> {
+public class StdJsonSerializer implements JsonSerializer {
     private static final Logger LOG = LoggerFactory.getLogger(StdJsonSerializer.class);
 
     @Override
@@ -20,6 +21,12 @@ public class StdJsonSerializer implements JsonSerializer<Object> {
         if (clazz.isPrimitive() || obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
             gen = serializePrimitive(obj, gen, context);
             return gen;
+        }
+
+        Class<?> aClass = obj.getClass();
+        Optional<JsonSerializer> customSerializer = context.findSerializer(aClass);
+        if (customSerializer.isPresent()) {
+            return customSerializer.get().serialize(aClass.cast(obj), gen, context);
         }
 
         return serializeObject(obj, gen, context);
@@ -64,7 +71,7 @@ public class StdJsonSerializer implements JsonSerializer<Object> {
             }
             jsonGen.writeFieldName(fieldName);
             String fieldValueJson = serialize(fieldValue, jsonGen, context).generateString();
-            jsonGen = new JsonGenerator(fieldValueJson);
+            jsonGen = new JsonGenerator(fieldValueJson, context.getFeatures());
 
             runner++;
             if (runner < fields.length) {
