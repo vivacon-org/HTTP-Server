@@ -1,7 +1,10 @@
 package org.vivacon.framework.serialization.json.serializer;
 
 import org.vivacon.framework.serialization.common.Serializer;
-import org.vivacon.framework.serialization.common.StrGenerator;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 
 public class JsonSerializationContainer implements Serializer {
 
@@ -12,16 +15,17 @@ public class JsonSerializationContainer implements Serializer {
     }
 
     @Override
-    public String serialize(Object obj, StrGenerator gen) {
-        if (!(gen instanceof JsonGenerator jsonGen)) {
-            throw new RuntimeException("Invalid generator, expect JsonGenerator");
-        }
-        return new StdJsonSerializer().serialize(obj, jsonGen, context).generateString();
+    public String serialize(Object obj, Writer writer) {
+        JsonGenerator jsonGenerator = new JsonGenerator(writer, context.getFeatures());
+        return new StdJsonSerializer().serialize(obj, jsonGenerator, context).generateString();
     }
 
     @Override
     public String serialize(Object obj) {
-        JsonGenerator jsonGenerator = new JsonGenerator(context.getFeatures());
-        return new StdJsonSerializer().serialize(obj, jsonGenerator, context).generateString();
+        try (Writer writer = new StringWriter()) {
+            return serialize(obj, writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

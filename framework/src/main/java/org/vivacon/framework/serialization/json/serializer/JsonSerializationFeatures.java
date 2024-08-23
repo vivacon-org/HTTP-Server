@@ -11,11 +11,19 @@ public class JsonSerializationFeatures {
         shouldIncludeClazzNameWrapper = false;
     }
 
-    public void shouldIncludeClazzNameWrapper(boolean shouldIncludeClazzNameWrapper) {
+    public void enableIncludeClazzNameWrapper(boolean shouldIncludeClazzNameWrapper) {
         this.shouldIncludeClazzNameWrapper = shouldIncludeClazzNameWrapper;
     }
 
-    public void shouldPrintPrettyJson(boolean shouldPrintPrettyJson) {
+    public boolean shouldIncludeClazzNameWrapper() {
+        return shouldIncludeClazzNameWrapper;
+    }
+
+    public void enablePrintPrettyJson(boolean shouldPrintPrettyJson) {
         this.shouldPrintPrettyJson = shouldPrintPrettyJson;
+    }
+
+    public boolean shouldPrintPrettyJson() {
+        return shouldPrintPrettyJson;
     }
 }

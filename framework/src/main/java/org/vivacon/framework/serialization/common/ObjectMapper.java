@@ -3,6 +3,7 @@ package org.vivacon.framework.serialization.common;
 import org.vivacon.framework.serialization.json.deserializer.node.JsonNode;
 
 import java.io.Reader;
+import java.io.Writer;
 
 public abstract class ObjectMapper implements Serializer, Deserializer {
 
@@ -31,8 +32,8 @@ public abstract class ObjectMapper implements Serializer, Deserializer {
     }
 
     @Override
-    public String serialize(Object obj, StrGenerator gen) {
-        return serializationContainer.serialize(obj, gen);
+    public String serialize(Object obj, Writer writer) {
+        return serializationContainer.serialize(obj, writer);
     }
 
     public JsonNode readTree(Reader inputReader) {
