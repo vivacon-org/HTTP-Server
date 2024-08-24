@@ -8,6 +8,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 public class StdJsonSerializer implements JsonSerializer {
     private static final Logger LOG = LoggerFactory.getLogger(StdJsonSerializer.class);
@@ -17,6 +18,12 @@ public class StdJsonSerializer implements JsonSerializer {
         if (obj == null) {
             gen.writeNull();
             return gen;
+        }
+
+        Class<?> clazz = obj.getClass();
+        Optional<JsonSerializer> customSerializer = context.findSerializer(clazz);
+        if (customSerializer.isPresent()) {
+            return customSerializer.get().serialize(obj, gen, context);
         }
 
         if (obj instanceof Collection) {
@@ -31,7 +38,7 @@ public class StdJsonSerializer implements JsonSerializer {
             return serializeMap((Map<?, ?>) obj, gen, context);
         }
 
-        if (obj.getClass().isPrimitive() || obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
+        if (clazz.isPrimitive() || obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
             return serializePrimitive(obj, gen, context);
         }
 

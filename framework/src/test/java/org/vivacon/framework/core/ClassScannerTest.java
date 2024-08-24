@@ -3,16 +3,17 @@ package org.vivacon.framework.core;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.vivacon.framework.bean.annotations.Qualifier;
-import org.vivacon.framework.bean.annotations.Service;
-import org.vivacon.framework.web.annotations.Controller;
+import org.vivacon.framework.bean.annotation.Qualifier;
+import org.vivacon.framework.bean.annotation.Service;
+import org.vivacon.framework.web.annotation.RestController;
 
 import java.lang.annotation.Annotation;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 class ClassScannerTest {
     ClassScanner clazzScanner;
@@ -22,7 +23,7 @@ class ClassScannerTest {
     void setUp() {
         clazzScanner = ClassScanner.getInstance();
         managedAnnotations = new HashSet<>();
-        managedAnnotations.add(Controller.class);
+        managedAnnotations.add(RestController.class);
         managedAnnotations.add(Service.class);
     }
 
@@ -44,7 +45,7 @@ class ClassScannerTest {
     private static class StudentService {
     }
 
-    @Controller
+    @RestController
     private static class SchoolController {
         private ClassScannerTest.ClazzService clazzService;
         private ClassScannerTest.StudentService studentService;

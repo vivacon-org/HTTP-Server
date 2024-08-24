@@ -1,4 +1,4 @@
-package org.vivacon.framework.bean.annotations;
+package org.vivacon.framework.bean.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

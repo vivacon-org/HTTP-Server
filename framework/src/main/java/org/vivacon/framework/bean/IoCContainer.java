@@ -2,7 +2,7 @@ package org.vivacon.framework.bean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vivacon.framework.bean.annotations.PostConstruct;
+import org.vivacon.framework.bean.annotation.PostConstruct;
 import org.vivacon.framework.core.ClassScanner;
 import org.vivacon.framework.core.event.ClearCacheEvent;
 import org.vivacon.framework.core.event.Event;

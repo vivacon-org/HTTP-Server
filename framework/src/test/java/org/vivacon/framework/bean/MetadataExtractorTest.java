@@ -3,17 +3,23 @@ package org.vivacon.framework.bean;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.vivacon.framework.bean.annotations.Autowired;
-import org.vivacon.framework.bean.annotations.Qualifier;
-import org.vivacon.framework.bean.annotations.Service;
+import org.vivacon.framework.bean.annotation.Autowired;
+import org.vivacon.framework.bean.annotation.Qualifier;
+import org.vivacon.framework.bean.annotation.Service;
 import org.vivacon.framework.core.event.ClearCacheEvent;
 import org.vivacon.framework.core.event.EventBroker;
-import org.vivacon.framework.web.annotations.Controller;
+import org.vivacon.framework.web.annotation.RestController;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 class MetadataExtractorTest {
     private MetadataExtractor metadataExtractor;
@@ -115,7 +121,7 @@ class MetadataExtractorTest {
     public void test_buildBeanDefinitions() throws NoSuchMethodException {
         List<Class<?>> componentClasses = Arrays.asList(SchoolController.class);
 
-        Map<Class<?>, BeanDefinition> expectedBeanDefinition =  new HashMap<>();
+        Map<Class<?>, BeanDefinition> expectedBeanDefinition = new HashMap<>();
 
         Constructor<?> constructor = SchoolController.class.getConstructor(ClazzService.class, StudentService.class, DepartmentService.class);
         Parameter paramClazz = constructor.getParameters()[0];
@@ -138,18 +144,18 @@ class MetadataExtractorTest {
         fieldBindingName.put(fieldDepartment, new HashSet<>(Set.of("DepartmentService")));
 
         BeanDefinition beanDefinition = new BeanDefinition.BeanDefinitionBuilder()
-                        .setBeanClass(SchoolController.class)
-                        .setBindNames(new HashSet<>(Set.of("SchoolController")))
-                        .setInjectedConstructor(constructor)
-                        .setFieldToBindingNames(fieldBindingName).build();
+                .setBeanClass(SchoolController.class)
+                .setBindNames(new HashSet<>(Set.of("SchoolController")))
+                .setInjectedConstructor(constructor)
+                .setFieldToBindingNames(fieldBindingName).build();
 
-        expectedBeanDefinition.put(SchoolController.class, beanDefinition );
+        expectedBeanDefinition.put(SchoolController.class, beanDefinition);
 
         Map<Class<?>, BeanDefinition> actualBeanDefinition = MetadataExtractor.getInstance().buildBeanDefinitions(componentClasses);
         Assertions.assertEquals(expectedBeanDefinition, actualBeanDefinition);
     }
 
-    @Controller
+    @RestController
     private static class SchoolController {
         private ClazzService clazzService;
         private StudentService studentService;
@@ -165,7 +171,7 @@ class MetadataExtractorTest {
         }
     }
 
-    @Controller
+    @RestController
     private static class SchoolController_OnlyOneCtor {
         private ClazzService clazzService;
         private StudentService studentService;
@@ -176,7 +182,7 @@ class MetadataExtractorTest {
         }
     }
 
-    @Controller
+    @RestController
     private static class SchoolController_ManyCtorsWithOneAutowired {
 
         private ClazzService clazzService;
@@ -194,7 +200,7 @@ class MetadataExtractorTest {
         }
     }
 
-    @Controller
+    @RestController
     private static class SchoolController_ManyCtorsNoAutowired {
         private ClazzService clazzService;
         private StudentService studentService;

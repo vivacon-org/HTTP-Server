@@ -1,20 +1,18 @@
 package org.vivacon.framework.core;
 
-import kotlin.reflect.jvm.internal.impl.descriptors.annotations.Annotated;
-import org.vivacon.framework.bean.*;
-import org.vivacon.framework.bean.annotations.Component;
-import org.vivacon.framework.bean.annotations.Service;
-import org.vivacon.framework.core.event.Event;
-import org.vivacon.framework.core.event.EventBroker;
-import org.vivacon.framework.web.annotations.Controller;
+import org.vivacon.framework.bean.BeanFactory;
+import org.vivacon.framework.bean.BeansInitiationOrderResolver;
+import org.vivacon.framework.bean.IoCContainer;
+import org.vivacon.framework.bean.MetadataExtractor;
+import org.vivacon.framework.bean.annotation.Component;
+import org.vivacon.framework.bean.annotation.Service;
+import org.vivacon.framework.web.annotation.RestController;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 public class VivaconApplication {
@@ -28,7 +26,7 @@ public class VivaconApplication {
 
         try {
             Set<Class<? extends Annotation>> managedAnnotations = new HashSet<>();
-            managedAnnotations.add(Controller.class);
+            managedAnnotations.add(RestController.class);
             managedAnnotations.add(Service.class);
             managedAnnotations.add(Component.class);
 
