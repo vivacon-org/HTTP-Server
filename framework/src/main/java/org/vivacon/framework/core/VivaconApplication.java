@@ -1,11 +1,12 @@
 package org.vivacon.framework.core;
 
+import kotlin.reflect.jvm.internal.impl.descriptors.annotations.Annotated;
 import org.vivacon.framework.bean.*;
-import org.vivacon.framework.bean.annotations.Component;
-import org.vivacon.framework.bean.annotations.Service;
+import org.vivacon.framework.bean.annotation.Component;
+import org.vivacon.framework.bean.annotation.Service;
 import org.vivacon.framework.event.Event;
 import org.vivacon.framework.event.EventBroker;
-import org.vivacon.framework.web.annotations.Controller;
+import org.vivacon.framework.web.annotation.RestController;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -31,7 +32,7 @@ public class VivaconApplication {
     public void run() {
         try {
             Set<Class<? extends Annotation>> managedAnnotations = new HashSet<>();
-            managedAnnotations.add(Controller.class);
+            managedAnnotations.add(RestController.class);
             managedAnnotations.add(Service.class);
             managedAnnotations.add(Component.class);
 

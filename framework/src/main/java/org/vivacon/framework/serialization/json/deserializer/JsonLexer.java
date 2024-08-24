@@ -29,9 +29,7 @@ public class JsonLexer {
     private int currentChar;
 
     public JsonLexer(String input) throws IOException {
-        this.reader = new StringReader(input);
-        this.currentChar = reader.read();
-        ResourceCleaner.register(this, reader);
+        this(new StringReader(input));
     }
 
     public JsonLexer(Reader input) throws IOException {

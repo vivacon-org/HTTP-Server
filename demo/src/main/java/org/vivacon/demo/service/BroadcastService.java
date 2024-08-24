@@ -2,7 +2,7 @@ package org.vivacon.demo.service;
 
 
 import org.vivacon.demo.event.NewVideoPublishEvent;
-import org.vivacon.framework.bean.annotations.Component;
+import org.vivacon.framework.bean.annotation.Component;
 import org.vivacon.framework.event.EventBroker;
 
 @Component

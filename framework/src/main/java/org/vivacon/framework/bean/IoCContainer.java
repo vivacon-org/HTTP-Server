@@ -2,7 +2,7 @@ package org.vivacon.framework.bean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vivacon.framework.bean.annotations.PostConstruct;
+import org.vivacon.framework.bean.annotation.PostConstruct;
 import org.vivacon.framework.core.ClassScanner;
 import org.vivacon.framework.event.ClearCacheEvent;
 import org.vivacon.framework.event.Event;
@@ -59,7 +59,7 @@ public class IoCContainer implements EventListener {
 
     @Override
     public void handleEvent(Event event) {
-        if (event instanceof  ClearCacheEvent){
+        if (event instanceof ClearCacheEvent) {
             clazzToBean.clear();
             bindNameToBeans.clear();
             beanClazzToDefinition.clear();

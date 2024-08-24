@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.vivacon.framework.bean.annotations.Component;
-import org.vivacon.framework.bean.annotations.Service;
+import org.vivacon.framework.bean.annotation.Component;
+import org.vivacon.framework.bean.annotation.Service;
 import org.vivacon.framework.core.ClassScanner;
 import org.vivacon.framework.event.EventBroker;
 

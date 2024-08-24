@@ -2,8 +2,8 @@ package org.vivacon.framework.bean;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.vivacon.framework.bean.annotations.Component;
-import org.vivacon.framework.bean.annotations.Service;
+import org.vivacon.framework.bean.annotation.Component;
+import org.vivacon.framework.bean.annotation.Service;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

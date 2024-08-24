@@ -2,8 +2,8 @@ package org.vivacon.framework.bean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vivacon.framework.bean.annotations.Autowired;
-import org.vivacon.framework.bean.annotations.Qualifier;
+import org.vivacon.framework.bean.annotation.Autowired;
+import org.vivacon.framework.bean.annotation.Qualifier;
 import org.vivacon.framework.event.ClearCacheEvent;
 import org.vivacon.framework.event.Event;
 import org.vivacon.framework.event.EventBroker;

@@ -3,10 +3,10 @@ package org.vivacon.framework.core;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.vivacon.framework.bean.annotations.Autowired;
-import org.vivacon.framework.bean.annotations.Component;
-import org.vivacon.framework.bean.annotations.Service;
-import org.vivacon.framework.web.annotations.Controller;
+import org.vivacon.framework.bean.annotation.Autowired;
+import org.vivacon.framework.bean.annotation.Component;
+import org.vivacon.framework.bean.annotation.Service;
+import org.vivacon.framework.web.annotation.RestController;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
@@ -25,7 +25,7 @@ class ClassScannerTest {
     void setUp() {
         clazzScanner = ClassScanner.getInstance();
         managedAnnotations = new HashSet<>();
-        managedAnnotations.add(Controller.class);
+        managedAnnotations.add(RestController.class);
         managedAnnotations.add(Service.class);
     }
 
@@ -34,7 +34,7 @@ class ClassScannerTest {
         Path scanningPath = Path.of("C:\\AiNgoc\\HTTP-Server\\framework\\build\\classes\\java\\test");
 
         Set<Class<? extends Annotation>> managedAnnotations = new HashSet<>();
-        managedAnnotations.add(Controller.class);
+        managedAnnotations.add(RestController.class);
         managedAnnotations.add(Service.class);
         managedAnnotations.add(Component.class);
 
@@ -83,7 +83,7 @@ class ClassScannerTest {
 
     //TODO: test scanJarFile
 
-    @Controller
+    @RestController
     private static class SchoolController {
         private DepartmentService departmentService;
 

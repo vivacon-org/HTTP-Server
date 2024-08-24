@@ -4,9 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vivacon.framework.serialization.common.StrGenerator;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 
-public class StdJsonSerializer implements JsonSerializer<Object> {
+public class StdJsonSerializer implements JsonSerializer {
     private static final Logger LOG = LoggerFactory.getLogger(StdJsonSerializer.class);
 
     @Override
@@ -17,39 +21,93 @@ public class StdJsonSerializer implements JsonSerializer<Object> {
         }
 
         Class<?> clazz = obj.getClass();
-        if (clazz.isPrimitive() || obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
-            gen = serializePrimitive(obj, gen, context);
-            return gen;
+        Optional<JsonSerializer> customSerializer = context.findSerializer(clazz);
+        if (customSerializer.isPresent()) {
+            return customSerializer.get().serialize(obj, gen, context);
         }
 
-        return serializeObject(obj, gen, context);
+        if (obj instanceof Collection) {
+            return serializeCollection((Collection<?>) obj, gen, context);
+        }
+
+        if (obj.getClass().isArray()) {
+            return serializeArray(obj, gen, context);
+        }
+
+        if (obj instanceof Map) {
+            return serializeMap((Map<?, ?>) obj, gen, context);
+        }
+
+        if (clazz.isPrimitive() || obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
+            return serializePrimitive(obj, gen, context);
+        }
+
+        return serializeObjectFields(obj, gen, context);
     }
 
     private JsonGenerator serializePrimitive(Object obj, JsonGenerator gen, JsonSerializationContext context) {
-        JsonGenerator jsonGen = gen.clone();
-
         if (obj instanceof String) {
-            jsonGen.writeString((String) obj);
-            return jsonGen;
+            gen.writeString((String) obj);
+            return gen;
         }
 
         if (obj instanceof Number) {
-            jsonGen.writeNumber((Number) obj);
-            return jsonGen;
+            gen.writeNumber((Number) obj);
+            return gen;
         }
 
         if (obj instanceof Boolean) {
-            jsonGen.writeString(obj.toString());
+            gen.writeString(obj.toString());
         }
 
-        return jsonGen;
+        return gen;
     }
 
-    private JsonGenerator serializeObject(Object obj, JsonGenerator gen, JsonSerializationContext context) {
-        JsonGenerator jsonGen = gen.clone();
+    private JsonGenerator serializeCollection(Collection<?> collection, JsonGenerator gen, JsonSerializationContext context) {
+        gen.writeStartArray();
+        boolean first = true;
+        for (Object item : collection) {
+            if (!first) {
+                gen.writeSeparator();
+            }
+            serialize(item, gen, context);
+            first = false;
+        }
+        gen.writeEndArray();
+        return gen;
+    }
 
-        jsonGen.writeStartObject();
-        jsonGen.writeNextLine();
+    private JsonGenerator serializeArray(Object array, JsonGenerator gen, JsonSerializationContext context) {
+        gen.writeStartArray();
+        int length = Array.getLength(array);
+        for (int i = 0; i < length; i++) {
+            if (i > 0) {
+                gen.writeSeparator();
+            }
+            serialize(Array.get(array, i), gen, context);
+        }
+        gen.writeEndArray();
+        return gen;
+    }
+
+    private JsonGenerator serializeMap(Map<?, ?> map, JsonGenerator gen, JsonSerializationContext context) {
+        gen.writeStartObject();
+        boolean first = true;
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            if (!first) {
+                gen.writeSeparator();
+            }
+            gen.writeFieldName(entry.getKey().toString());
+            serialize(entry.getValue(), gen, context);
+            first = false;
+        }
+        gen.writeEndObject();
+        return gen;
+    }
+
+    private JsonGenerator serializeObjectFields(Object obj, JsonGenerator gen, JsonSerializationContext context) {
+        gen.writeStartObject();
+        gen.writeNextLine();
         Field[] fields = obj.getClass().getDeclaredFields();
 
         int runner = 0;
@@ -62,18 +120,18 @@ public class StdJsonSerializer implements JsonSerializer<Object> {
             } catch (IllegalAccessException e) {
                 fieldValue = null;
             }
-            jsonGen.writeFieldName(fieldName);
-            String fieldValueJson = serialize(fieldValue, jsonGen, context).generateString();
-            jsonGen = new JsonGenerator(fieldValueJson);
+
+            gen.writeFieldName(fieldName);
+            serialize(fieldValue, gen, context);
 
             runner++;
             if (runner < fields.length) {
-                jsonGen.writeSeparator();
+                gen.writeSeparator();
             }
-            jsonGen.writeNextLine();
+            gen.writeNextLine();
         }
 
-        jsonGen.writeEndObject();
-        return jsonGen;
+        gen.writeEndObject();
+        return gen;
     }
 }

@@ -3,31 +3,37 @@ package org.vivacon.framework.serialization.common;
 import org.vivacon.framework.serialization.json.deserializer.node.JsonNode;
 
 import java.io.Reader;
+import java.io.Writer;
 
 public abstract class ObjectMapper implements Serializer, Deserializer {
 
-    private final Serializer standardJsonSerializer;
-    private final Deserializer standardJsonDeserializer;
+    protected final Serializer serializationContainer;
+    protected final Deserializer deserializationContainer;
 
     public ObjectMapper(Serializer standardStdJsonSerializer,
                         Deserializer standardStdJsonDeserializer) {
-        this.standardJsonSerializer = standardStdJsonSerializer;
-        this.standardJsonDeserializer = standardStdJsonDeserializer;
+        this.serializationContainer = standardStdJsonSerializer;
+        this.deserializationContainer = standardStdJsonDeserializer;
     }
 
     @Override
     public <T> T deserialize(String serializedString, Class<? extends T> expectedClass) {
-        return standardJsonDeserializer.deserialize(serializedString, expectedClass);
+        return deserializationContainer.deserialize(serializedString, expectedClass);
     }
 
     @Override
     public <T> T deserialize(Reader inputReader, Class<? extends T> expectedClass) {
-        return standardJsonDeserializer.deserialize(inputReader, expectedClass);
+        return deserializationContainer.deserialize(inputReader, expectedClass);
     }
 
     @Override
-    public String serialize(Object obj, StrGenerator gen) {
-        return standardJsonSerializer.serialize(obj, gen);
+    public String serialize(Object obj) {
+        return serializationContainer.serialize(obj);
+    }
+
+    @Override
+    public String serialize(Object obj, Writer writer) {
+        return serializationContainer.serialize(obj, writer);
     }
 
     public JsonNode readTree(Reader inputReader) {
