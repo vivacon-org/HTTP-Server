@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.vivacon.framework.bean.annotations.Autowired;
 import org.vivacon.framework.bean.annotations.Qualifier;
 import org.vivacon.framework.bean.annotations.Service;
-import org.vivacon.framework.core.event.ClearCacheEvent;
-import org.vivacon.framework.core.event.EventBroker;
+import org.vivacon.framework.event.ClearCacheEvent;
+import org.vivacon.framework.event.EventBroker;
 import org.vivacon.framework.web.annotations.Controller;
 
 import java.lang.reflect.Constructor;

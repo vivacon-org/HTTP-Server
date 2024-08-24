@@ -1,4 +1,4 @@
-package org.vivacon.framework.core.event;
+package org.vivacon.framework.event;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -11,6 +11,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * The {@code EventBroker} class is responsible for managing event listeners and publishing events
+ * asynchronously. It acts as a mediator between event publishers and subscribers, ensuring that
+ * events are handled by the appropriate listeners.
+ * <p>
+ * The {@code EventBroker} is implemented as a singleton, ensuring only one instance exists
+ * throughout the application lifecycle.
+ */
 public class EventBroker {
     private static EventBroker instance = new EventBroker();
     public static EventBroker getInstance() {

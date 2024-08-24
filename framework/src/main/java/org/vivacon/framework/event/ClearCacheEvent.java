@@ -1,12 +1,7 @@
-package org.vivacon.framework.core.event;
-
-import java.util.Map;
-import java.util.Set;
+package org.vivacon.framework.event;
 
 public class ClearCacheEvent implements Event {
 
     public ClearCacheEvent() {
     }
-
-
 }

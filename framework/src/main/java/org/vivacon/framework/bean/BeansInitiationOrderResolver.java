@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+/**
+ * The {@code BeansInitiationOrderResolver} class is responsible for resolving the order
+ * in which beans should be initialized based on their inter-dependencies.
+ * It uses a topological sort algorithm to ensure that beans are instantiated in an order that respects their dependencies.
+ */
 public class BeansInitiationOrderResolver {
 
     private static final BeansInitiationOrderResolver INSTANCE = new BeansInitiationOrderResolver();
