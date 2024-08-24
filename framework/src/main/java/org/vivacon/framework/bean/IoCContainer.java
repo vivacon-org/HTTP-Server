@@ -4,10 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vivacon.framework.bean.annotation.PostConstruct;
 import org.vivacon.framework.core.ClassScanner;
-import org.vivacon.framework.core.event.ClearCacheEvent;
-import org.vivacon.framework.core.event.Event;
-import org.vivacon.framework.core.event.EventBroker;
-import org.vivacon.framework.core.event.EventListener;
+import org.vivacon.framework.event.ClearCacheEvent;
+import org.vivacon.framework.event.Event;
+import org.vivacon.framework.event.EventBroker;
+import org.vivacon.framework.event.EventListener;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -20,6 +20,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * The {@code IoCContainer} class is responsible for managing the lifecycle of beans in the application.
+ * It handles bean creation, dependency injection, and bean post-processing. The IoC container scans the classpath
+ * for classes annotated with specific annotations, loads their definitions, creates instances, and manages them in an internal container.
+ * It also registers itself as an event listener to handle specific events like {@code ClearCacheEvent}.
+ */
 public class IoCContainer implements EventListener {
     private final Map<Class<?>, Object> clazzToBean;
     private final Map<String, Set<Object>> bindNameToBeans;

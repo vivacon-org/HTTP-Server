@@ -19,12 +19,12 @@ public class CompanyController {
 
     @RequestMapping(path = "department")
     public String getAllDepartments() {
-        return this.broadcastService.echo("department");
+        return this.broadcastService.saveVideo("department", "");
     }
 
     @RequestMapping(path = "employee")
     public String getAllEmployee() {
-        return this.broadcastService.echo("Employee");
+        return this.broadcastService.saveVideo("Employee", "");
     }
 
 }

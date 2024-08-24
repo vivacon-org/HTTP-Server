@@ -4,10 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vivacon.framework.bean.annotation.Autowired;
 import org.vivacon.framework.bean.annotation.Qualifier;
-import org.vivacon.framework.core.event.ClearCacheEvent;
-import org.vivacon.framework.core.event.Event;
-import org.vivacon.framework.core.event.EventBroker;
-import org.vivacon.framework.core.event.EventListener;
+import org.vivacon.framework.event.ClearCacheEvent;
+import org.vivacon.framework.event.Event;
+import org.vivacon.framework.event.EventBroker;
+import org.vivacon.framework.event.EventListener;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -20,6 +20,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * The {@code MetadataExtractor} class is responsible for extracting metadata from component classes
+ * and building {@code BeanDefinition} objects. It supports both constructor and field injection,
+ * and listens for cache clearing events to manage its internal cache.
+ */
 public class MetadataExtractor implements EventListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(MetadataExtractor.class);
