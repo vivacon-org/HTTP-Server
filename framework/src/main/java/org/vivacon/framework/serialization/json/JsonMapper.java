@@ -21,6 +21,10 @@ public class JsonMapper extends ObjectMapper {
         this.context = context;
     }
 
+    public void setFeatures(JsonSerializationFeatures features) {
+        this.context.setFeatures(features);
+    }
+
     public JsonMapper(Serializer standardStdJsonSerializer, Deserializer standardStdJsonDeserializer) {
         super(standardStdJsonSerializer, standardStdJsonDeserializer);
         context = new JsonSerializationContext();

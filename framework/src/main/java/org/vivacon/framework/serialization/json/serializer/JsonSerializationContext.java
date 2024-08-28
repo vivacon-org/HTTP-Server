@@ -20,7 +20,7 @@ public class JsonSerializationContext {
     }
 
     public Optional<JsonSerializer> findSerializer(Class<?> clazz) {
-        return Optional.of(clazzToSerializer.get(clazz));
+        return Optional.ofNullable(clazzToSerializer.get(clazz));
     }
 
     public void setFeatures(JsonSerializationFeatures features) {

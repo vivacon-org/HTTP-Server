@@ -1,5 +1,6 @@
 package org.vivacon.framework.event;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,20 +51,31 @@ public class EventBroker {
             return Collections.emptyList();
         }
 
+        // Filter out ListenerSources with null listenerInstances
+        listenerSources.removeIf(listenerSource -> listenerSource.listenerInstance.get() == null);
+
         for (ListenerSource listenerSource : listenerSources) {
+
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
-                    if(listenerSource.listenerInstance instanceof EventListener) {
-                        ((EventListener) listenerSource.listenerInstance).handleEvent(event);
+                    Object listenerInstance = listenerSource.listenerInstance.get();
+                    if (listenerInstance == null) return;
+
+                    if (listenerInstance instanceof EventListener) {
+                        ((EventListener) listenerInstance).handleEvent(event);
                         return;
                     }
-
-                    listenerSource.listenerMethod.invoke(listenerSource.listenerInstance, event);
+                    Method method = listenerSource.listenerMethod.get();
+                    if (method == null) {
+                        return;
+                    }
+                    method.invoke(listenerInstance, event);
                 } catch (Exception e) {
                     throw new RuntimeException(String.format("something went wrong with the async handler %s for event $s",
                             listenerSource.listenerInstance, event), e);
                 }
             }, executor);
+
             futures.add(future);
         }
         return Collections.unmodifiableList(futures);
@@ -71,19 +83,19 @@ public class EventBroker {
 
     private static class ListenerSource {
 
-        private Object listenerInstance;
+        private WeakReference<Object> listenerInstance;
 
-        private Method listenerMethod;
+        private WeakReference<Method> listenerMethod;
 
         public ListenerSource(Object listenerInstance) {
             // for internal framework event listeners
-            this.listenerInstance = listenerInstance;
+            this.listenerInstance = new WeakReference<Object>(listenerInstance);
         }
 
         public ListenerSource(Object listenerInstance, Method listenerMethod) {
             // for instances of dev who uses our framework
-            this.listenerInstance = listenerInstance;
-            this.listenerMethod = listenerMethod;
+            this.listenerInstance = new WeakReference<>(listenerInstance);;
+            this.listenerMethod = new WeakReference<>(listenerMethod);
         }
     }
 }

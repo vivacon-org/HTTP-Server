@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.vivacon.framework.bean.annotation.Component;
 import org.vivacon.framework.bean.annotation.Service;
-import org.vivacon.framework.core.ClassScanner;
+import org.vivacon.framework.common.ClassScanner;
+import org.vivacon.framework.common.MetadataExtractor;
 import org.vivacon.framework.event.EventBroker;
 
 import java.lang.annotation.Annotation;
@@ -14,8 +15,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class IoCContainerTest {
     private IoCContainer ioCContainer;

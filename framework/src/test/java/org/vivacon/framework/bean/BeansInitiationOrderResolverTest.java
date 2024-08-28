@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.vivacon.framework.bean.annotation.Autowired;
 import org.vivacon.framework.bean.annotation.Component;
 import org.vivacon.framework.bean.annotation.Service;
+import org.vivacon.framework.common.MetadataExtractor;
 import org.vivacon.framework.web.annotation.RestController;
 
 import java.util.Arrays;

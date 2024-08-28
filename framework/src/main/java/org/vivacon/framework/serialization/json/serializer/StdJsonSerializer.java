@@ -10,6 +10,11 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
+// TODO: test this class, all cases
+// support shouldIncludeClazzNameWrapper
+// support custom serializer
+// support custom key serializer
+// static, transient don't serialize
 public class StdJsonSerializer implements JsonSerializer {
     private static final Logger LOG = LoggerFactory.getLogger(StdJsonSerializer.class);
 

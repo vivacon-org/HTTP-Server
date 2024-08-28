@@ -103,7 +103,9 @@ public class JsonGenerator implements Cloneable, StrGenerator {
 
     @Override
     public void writeNextLine() {
-        write("\n");
+        if(features.shouldPrintPrettyJson()) {
+            write("\n");
+        }
     }
 
     @Override

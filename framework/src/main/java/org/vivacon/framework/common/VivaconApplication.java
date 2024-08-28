@@ -1,4 +1,4 @@
-package org.vivacon.framework.core;
+package org.vivacon.framework.common;
 
 import org.vivacon.framework.bean.*;
 import org.vivacon.framework.bean.annotation.Component;
@@ -37,12 +37,16 @@ public class VivaconApplication {
 
             URL location = mainClass.getProtectionDomain().getCodeSource().getLocation();
             Path scanningPath = Path.of(location.toURI());
+            ClassLoader classLoader = ClassLoaderFactory.getInstance().create(location);
+            ClassScanner classScanner = new ClassScanner(classLoader);
 
-            IoCContainer ioCContainer = new IoCContainer(ClassScanner.getInstance(), MetadataExtractor.getInstance(), BeanFactory.getInstance(), BeansInitiationOrderResolver.getInstance(), scanningPath, managedAnnotations);
+            IoCContainer ioCContainer = new IoCContainer(classScanner, MetadataExtractor.getInstance(), BeanFactory.getInstance(), BeansInitiationOrderResolver.getInstance(), scanningPath, managedAnnotations);
             ioCContainer.loadBeans();
 
 
             Map<Class<?>, Object> beansContainer = ioCContainer.loadBeans();
+
+            //tach ham - nhan event clear cache - sau khi clear cache phai register
             Map<Class<?>, BeanDefinition> beanDefinitionContainer = ioCContainer.getBeanClazzToDefinition();
 
             for (Map.Entry<Class<?>, BeanDefinition> eachBeanDefinitionEntry : beanDefinitionContainer.entrySet()) {

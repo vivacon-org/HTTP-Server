@@ -1,18 +1,12 @@
-package org.vivacon.framework.core;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package org.vivacon.framework.common;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -31,17 +25,12 @@ import java.util.stream.Stream;
  */
 public class ClassScanner {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ClassScanner.class);
+    private final ClassLoader classLoader;
 
-    public ClassScanner() {
-        // Private constructor to prevent instantiation
+    public ClassScanner(ClassLoader classLoader) {
+        this.classLoader = classLoader;
     }
 
-    private static final ClassScanner INSTANCE = new ClassScanner();
-
-    public static ClassScanner getInstance() {
-        return INSTANCE;
-    }
 
     public List<Class<?>> scanClassesAnnotatedBy(Path scanningPath, Set<Class<? extends Annotation>> annotations) {
 
@@ -106,17 +95,24 @@ public class ClassScanner {
     private List<Class<?>> scanJarFile(JarFile jarFile) {
         List<Class<?>> classes = new ArrayList<>();
 
-        jarFile.stream()
-                .filter(entry -> !entry.isDirectory() && entry.getName().endsWith(".class"))
-                .map(this::convertJarEntryToClassName)
-                .forEach(className -> {
+        try {
+            Enumeration<JarEntry> entries = jarFile.entries();
+
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
+                    String className = convertJarEntryToClassName(entry);
                     try {
-                        classes.add(Class.forName(className));
+                        classes.add(classLoader.loadClass(className));
                     } catch (ClassNotFoundException e) {
                         throw new RuntimeException("Class not found: " + className, e);
                     }
-                });
+                }
+            }
 
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to scan JAR file: " + jarFile.getName(), e);
+        }
         return classes;
     }
 
@@ -145,36 +141,4 @@ public class ClassScanner {
                 .replace(File.separatorChar, '.');
         return className.substring(0, className.length() - ".class".length());
     }
-
-    public static void main(String[] args) {
-        String relativePath = "demo/build/libs/demo.jar";
-        String absolutePath = Paths.get(relativePath).toAbsolutePath().toString();
-
-        String relativePathDir = "demo/build/classes/java/main/org/vivacon/demo";
-        String absolutePathDir = Paths.get(relativePathDir).toAbsolutePath().toString();
-
-        ClassScanner scanner = new ClassScanner();
-
-        List<File> classFiles = scanner.scanDirectory(new File(absolutePathDir));
-        classFiles.forEach(file -> System.out.println(file.getAbsolutePath()));
-
-        File jarFile = new File(absolutePath);
-        try {
-            URL jarURL = jarFile.toURI().toURL();
-            URLClassLoader urlClassLoader = new URLClassLoader(new URL[]{jarURL}, Thread.currentThread().getClass().getClassLoader());
-            Thread.currentThread().setContextClassLoader(urlClassLoader);
-            LOG.info("JAR file loaded into classpath: " + jarFile.getAbsolutePath());
-        } catch (MalformedURLException e) {
-            LOG.error("Failed to load JAR file into classpath: " + jarFile.getAbsolutePath(), e);
-        }
-
-        try {
-            JarFile jarFileInProject = new JarFile(new File(absolutePath));
-            List<Class<?>> classes = scanner.scanJarFile(jarFileInProject);
-            classes.forEach(System.out::println);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
 }
