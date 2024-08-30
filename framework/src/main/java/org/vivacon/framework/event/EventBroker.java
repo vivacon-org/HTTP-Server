@@ -88,12 +88,10 @@ public class EventBroker {
         private WeakReference<Method> listenerMethod;
 
         public ListenerSource(Object listenerInstance) {
-            // for internal framework event listeners
             this.listenerInstance = new WeakReference<Object>(listenerInstance);
         }
 
         public ListenerSource(Object listenerInstance, Method listenerMethod) {
-            // for instances of dev who uses our framework
             this.listenerInstance = new WeakReference<>(listenerInstance);;
             this.listenerMethod = new WeakReference<>(listenerMethod);
         }

@@ -92,7 +92,7 @@ public class ClassScanner {
         return classFiles;
     }
 
-    private List<Class<?>> scanJarFile(JarFile jarFile) {
+    public List<Class<?>> scanJarFile(JarFile jarFile) {
         List<Class<?>> classes = new ArrayList<>();
 
         try {

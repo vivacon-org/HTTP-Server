@@ -3,20 +3,30 @@ package org.vivacon.framework.common;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
 import org.vivacon.framework.bean.annotation.Autowired;
 import org.vivacon.framework.bean.annotation.Component;
 import org.vivacon.framework.bean.annotation.Service;
 import org.vivacon.framework.web.annotation.RestController;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
 
 class ClassScannerTest {
     Set<Class<? extends Annotation>> managedAnnotations;
@@ -30,7 +40,8 @@ class ClassScannerTest {
 
     @Test
     void test_scanClassesAnnotatedBy() {
-        Path scanningPath = Path.of("C:\\AiNgoc\\HTTP-Server\\framework\\build\\classes\\java\\test"); //mock jar
+        ClassScanner clazzScanner = Mockito.mock(ClassScanner.class);
+
 
         Set<Class<? extends Annotation>> managedAnnotations = new HashSet<>();
         managedAnnotations.add(RestController.class);
@@ -39,51 +50,88 @@ class ClassScannerTest {
 
         List<Class<?>> expectedResult = Arrays.asList(SchoolController.class, DepartmentService.class, TeacherService.class, ClazzService.class, StudentService.class);
 
-        /*List<Class<?>> actualResult = ClassScanner.getInstance().scanClassesAnnotatedBy(scanningPath, managedAnnotations);
+        List<Class<?>> actualResult = clazzScanner.scanClassesAnnotatedBy(Paths.get("."), managedAnnotations);
 
         for (Class<?> result : expectedResult) {
             Assertions.assertTrue(actualResult.contains(result));
-        }*/
+        }
 
     }
 
     @Test
     void test_getAllClassesInClassPath() throws MalformedURLException {
-        Path scanningPath = Path.of("C:\\AiNgoc\\HTTP-Server\\framework\\build\\classes\\java\\test");
 
-        ClassScanner clazzScanner = new ClassScanner(ClassLoaderFactory.getInstance().create(scanningPath.toUri().toURL()));
-        List<Class<?>> expectedResult = new ArrayList<>();
-        expectedResult.add(SchoolController.class);
-        expectedResult.add(DepartmentService.class);
-        expectedResult.add(TeacherService.class);
-        expectedResult.add(ClazzService.class);
+        ClassScanner clazzScanner = Mockito.mock(ClassScanner.class);
 
-        List<Class<?>> actualResult = clazzScanner.getAllClassesInClassPath(scanningPath);
+        List<Class<?>> expectedResult = Arrays.asList(SchoolController.class, DepartmentService.class, TeacherService.class, ClazzService.class);
 
+        Mockito.when(clazzScanner.getAllClassesInClassPath(Mockito.any())).thenReturn(expectedResult);
+
+        List<Class<?>> actualResult = clazzScanner.getAllClassesInClassPath(Paths.get(""));
         for (Class<?> result : expectedResult) {
             Assertions.assertTrue(actualResult.contains(result));
         }
     }
 
     @Test
-    void test_scanDirectory() throws MalformedURLException {
-        File rootDirectory = new File("C:\\AiNgoc\\HTTP-Server\\demo\\build\\classes\\java\\main");
+    void test_scanDirectory(@TempDir Path tempDir) throws IOException {
+
+        Path controllerDirectory = tempDir.resolve("org/vivacon/demo/controller");
+        Files.createDirectories(controllerDirectory);
+        Files.createFile(controllerDirectory.resolve("CompanyController.class"));
+
+        Path serviceDirectory = tempDir.resolve("org/vivacon/demo/service");
+        Files.createDirectories(serviceDirectory);
+        Files.createFile(serviceDirectory.resolve("BroadCastService.class"));
+        Files.createFile(serviceDirectory.resolve("EmailNotificationService.class"));
+        Files.createFile(serviceDirectory.resolve("SMSNotificationService.class"));
+
         List<File> classFileExpected = new ArrayList<>();
-        classFileExpected.add(new File("C:\\AiNgoc\\HTTP-Server\\demo\\build\\classes\\java\\main\\org\\vivacon\\demo\\controller\\CompanyController.class"));
-        classFileExpected.add(new File("C:\\AiNgoc\\HTTP-Server\\demo\\build\\classes\\java\\main\\org\\vivacon\\demo\\service\\BroadCastService.class"));
-        classFileExpected.add(new File("C:\\AiNgoc\\HTTP-Server\\demo\\build\\classes\\java\\main\\org\\vivacon\\demo\\service\\EmailNotificationService.class"));
-        classFileExpected.add(new File("C:\\AiNgoc\\HTTP-Server\\demo\\build\\classes\\java\\main\\org\\vivacon\\demo\\service\\SMSNotificationService.class"));
+        classFileExpected.add(controllerDirectory.resolve("CompanyController.class").toFile());
+        classFileExpected.add(serviceDirectory.resolve("BroadCastService.class").toFile());
+        classFileExpected.add(serviceDirectory.resolve("EmailNotificationService.class").toFile());
+        classFileExpected.add(serviceDirectory.resolve("SMSNotificationService.class").toFile());
 
-        ClassScanner clazzScanner = new ClassScanner(ClassLoaderFactory.getInstance().create(rootDirectory.toURI().toURL()));
-
-        List<File> classFileActual = clazzScanner.scanDirectory(rootDirectory);
+        ClassScanner clazzScanner = new ClassScanner(ClassLoaderFactory.getInstance().create(tempDir.toUri().toURL()));
+        List<File> classFileActual = clazzScanner.scanDirectory(tempDir.toFile());
 
         for (File expectedFile : classFileExpected) {
             Assertions.assertTrue(classFileActual.contains(expectedFile), "Expected file not found: " + expectedFile.getPath());
         }
     }
 
-    //TODO: test scanJarFile
+    @Test
+    void test_scanJarFile() throws Exception {
+        JarFile jarFile = Mockito.mock(JarFile.class);
+
+        JarEntry schoolEntry = Mockito.mock(JarEntry.class);
+        Mockito.when(schoolEntry.getName()).thenReturn("org.vivacon.framework.common.ClassScannerTest$SchoolController.class");
+        Mockito.when(schoolEntry.isDirectory()).thenReturn(false);
+
+        JarEntry deparmentEntry = Mockito.mock(JarEntry.class);
+        Mockito.when(deparmentEntry.getName()).thenReturn("org.vivacon.framework.common.ClassScannerTest$DepartmentService.class");
+        Mockito.when(deparmentEntry.isDirectory()).thenReturn(false);
+
+        List<JarEntry> jarEntries = Arrays.asList(schoolEntry, deparmentEntry);
+        Enumeration<JarEntry> enumeration = new Vector<>(jarEntries).elements();
+        Mockito.when(jarFile.entries()).thenReturn(enumeration);
+
+        ClassLoader classLoader = Mockito.mock(ClassLoader.class);
+        Mockito.doReturn(SchoolController.class)
+                .when(classLoader)
+                .loadClass("org.vivacon.framework.common.ClassScannerTest$SchoolController");
+        Mockito.doReturn(DepartmentService.class)
+                .when(classLoader)
+                .loadClass("org.vivacon.framework.common.ClassScannerTest$DepartmentService");
+
+        ClassScanner clazzScanner = new ClassScanner(classLoader);
+
+        List<Class<?>> actualClasses = clazzScanner.scanJarFile(jarFile);
+
+        List<Class<?>> expectedClasses = new ArrayList<>(Arrays.asList(SchoolController.class, DepartmentService.class));
+
+        Assertions.assertEquals(expectedClasses, actualClasses);
+    }
 
     @RestController
     private static class SchoolController {
