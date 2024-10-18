@@ -6,7 +6,6 @@ mockito = "5.0.0"
 servlet = "4.0.1"
 
 [libraries]
-junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
@@ -25,7 +24,6 @@ commonCompile = [
 testCompile = [
     "slf4j",
     "logback",
-    "junit-bom",
     "junit-jupiter",
     "mockito-core",
     "mockito-inline",

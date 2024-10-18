@@ -42,10 +42,10 @@ public class BeansInitiationOrderResolver {
             BeanDefinition definition = entry.getValue();
 
             for (Field dependency : definition.getFieldToBindingNames().keySet()) {
-                if (graph.get(dependency) == null){
+                if (graph.get(dependency.getType()) == null){
                     continue;
                 }
-                graph.get(dependency).add(beanClass);
+                graph.get(dependency.getType()).add(beanClass);
                 inDegree.put(beanClass, inDegree.get(beanClass) + 1);
             }
         }
