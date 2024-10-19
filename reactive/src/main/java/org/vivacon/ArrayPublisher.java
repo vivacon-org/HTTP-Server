@@ -1,7 +1,9 @@
 package org.vivacon;
 
-public class ArrayPublisher<T> implements Publisher<T> {
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
+public class ArrayPublisher<T> implements Publisher<T> {
 
     private final T[] source;
 
@@ -11,21 +13,45 @@ public class ArrayPublisher<T> implements Publisher<T> {
 
     @Override
     public void subscribe(Subscriber<? super T> subscriber) {
-        
         subscriber.onSubscribe(new Subscription() {
 
-            int index;
+            AtomicInteger index = new AtomicInteger(0);
+            AtomicLong requested = new AtomicLong(0);
 
             @Override
-            public void request(long backpressure) {
-                try {
-                    for (int countingEachRequest = 0;
-                         countingEachRequest < backpressure && index < source.length;
-                         countingEachRequest++, index++) {
+            public void request(long n) {
+                if (n <= 0) {
+                    subscriber.onError(new IllegalArgumentException("Request must be greater than 0"));
+                    return;
+                }
 
-                        subscriber.onNext(source[index]);
+                long previousRequested = requested.getAndAccumulate(n, Long::sum);
+                if (previousRequested == 0) {
+                    emitItems();
+                }
+            }
+
+            private void emitItems() {
+                try {
+                    while (requested.get() > 0) {
+
+                        int currentIndex = index.getAndIncrement();
+                        
+                        if (currentIndex >= source.length) {
+                            subscriber.onComplete();
+                            return;
+                        }
+
+                        T element = source[currentIndex];
+                        if (element == null) {
+                            subscriber.onError(new NullPointerException());
+                            return;
+                        }
+
+                        subscriber.onNext(element);
+
+                        requested.decrementAndGet();
                     }
-                    subscriber.onComplete();
                 } catch (Exception ex) {
                     subscriber.onError(ex);
                 }
@@ -33,7 +59,7 @@ public class ArrayPublisher<T> implements Publisher<T> {
 
             @Override
             public void cancel() {
-
+                requested.set(0);
             }
         });
     }

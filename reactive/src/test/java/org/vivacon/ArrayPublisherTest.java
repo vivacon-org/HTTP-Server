@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.LongStream;
 
 public class ArrayPublisherTest {
@@ -103,6 +104,82 @@ public class ArrayPublisherTest {
 
         subscriptions[0].request(20);
         org.assertj.core.api.Assertions.assertThat(latch.await(1, TimeUnit.SECONDS)).isTrue();
+        org.assertj.core.api.Assertions.assertThat(collected).containsExactly(array);
+    }
+
+
+    @Test
+    public void mustSendNPENormally() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        Long[] array = new Long[]{null};
+        AtomicReference<Throwable> error = new AtomicReference<>();
+        ArrayPublisher<Long> publisher = new ArrayPublisher<>(array);
+
+        publisher.subscribe(new Subscriber<Long>() {
+            @Override
+            public void onSubscribe(Subscription s) {
+                s.request(4);
+            }
+
+            @Override
+            public void onNext(Long aLong) {
+
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                error.set(t);
+                latch.countDown();
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+
+        latch.await(1, TimeUnit.SECONDS);
+        org.assertj.core.api.Assertions.assertThat(error).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void shouldNotDieInStackOverflow() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        ArrayList<Long> collected = new ArrayList<>();
+        long toRequest = 1000L;
+        Long[] array = generate(toRequest);
+
+        ArrayPublisher<Long> publisher = new ArrayPublisher<>(array);
+
+        publisher.subscribe(new Subscriber<>() {
+
+            Subscription s;
+
+            @Override
+            public void onSubscribe(Subscription s) {
+                this.s = s;
+                s.request(1);
+            }
+
+            @Override
+            public void onNext(Long aLong) {
+                collected.add(aLong);
+                s.request(1);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+            }
+
+            @Override
+            public void onComplete() {
+                latch.countDown();
+            }
+        });
+
+        org.assertj.core.api.Assertions.assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
+
         org.assertj.core.api.Assertions.assertThat(collected).containsExactly(array);
     }
 
