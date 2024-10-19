@@ -12,9 +12,10 @@ repositories {
 val libs: VersionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 dependencies {
+    implementation(libs.findBundle("commonCompile").get())
     testImplementation(libs.findBundle("testCompile").get())
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useTestNG()
 }

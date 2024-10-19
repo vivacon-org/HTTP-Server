@@ -2,30 +2,37 @@
 junit = "5.9.1"
 slf4j = "2.0.13"
 logback = "1.5.6"
-mockito = "5.0.0"
+mockito = "4.0.0"
 servlet = "4.0.1"
-assertj = "3.24.2"
+assertj = "3.0.0"
+reactivestreams = "1.0.3"
+testng = "7.7.0"
 
 [libraries]
+testng = { group = "org.testng", name = "testng", version.ref = "testng" }
+reactivestreams = { group = 'org.reactivestreams', name = 'reactive-streams', version.ref = 'reactivestreams' }
+reactivestreams-tck = { group = "org.reactivestreams", name = "reactive-streams-tck", version.ref = "reactivestreams" }
 assertj-core = { group = "org.assertj", name = "assertj-core", version.ref = "assertj" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 slf4j = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
-mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
 servlet-api = { module = "javax.servlet:javax.servlet-api", version.ref = "servlet" }
 
 [bundles]
 servletAPI = ["servlet-api"]
 
 commonCompile = [
+    "reactivestreams",
     "slf4j",
     "logback",
 ]
 
 testCompile = [
+    "testng",
+    "reactivestreams",
+    "reactivestreams-tck",
     "assertj-core",
     "junit-jupiter",
     "mockito-core",
-    "mockito-inline",
 ]

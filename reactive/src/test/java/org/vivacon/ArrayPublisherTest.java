@@ -1,7 +1,12 @@
 package org.vivacon;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+import org.reactivestreams.tck.PublisherVerification;
+import org.reactivestreams.tck.TestEnvironment;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +15,24 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.LongStream;
 
-public class ArrayPublisherTest {
+public class ArrayPublisherTest extends PublisherVerification<Long> {
+
+    public ArrayPublisherTest() {
+        super(new TestEnvironment());
+    }
+
+    @Override
+    public Publisher<Long> createPublisher(long l) {
+        return new ArrayPublisher<>(generate(l));
+    }
+
+    @Override
+    public Publisher<Long> createFailedPublisher() {
+        return null;
+    }
 
     @Test
-    public void everyMethodInSubscriberShouldBeExecutedInParticularOrder() {
+    public void everyMethodInSubscriberShouldBeExecutedInParticularOrder() throws InterruptedException {
 
         CountDownLatch latch = new CountDownLatch(1);
         ArrayList<String> observedSignals = new ArrayList<>();
@@ -43,24 +62,22 @@ public class ArrayPublisherTest {
             }
         });
 
-        Assertions.assertDoesNotThrow(() -> {
-            Assertions.assertTrue(latch.await(1000, TimeUnit.MILLISECONDS));
+        Assert.assertTrue(latch.await(1000, TimeUnit.MILLISECONDS));
 
-            List<String> expectedCallingFunctions = new ArrayList<>();
-            expectedCallingFunctions.add("onSubscribe");
-            for (int i = 0; i < 5; i++) {
-                expectedCallingFunctions.add("onNext(" + i + ")");
-            }
-            expectedCallingFunctions.add("onComplete");
+        List<String> expectedCallingFunctions = new ArrayList<>();
+        expectedCallingFunctions.add("onSubscribe");
+        for (int i = 0; i < 5; i++) {
+            expectedCallingFunctions.add("onNext(" + i + ")");
+        }
+        expectedCallingFunctions.add("onComplete");
 
-            int index = 0;
-            for (String signal : observedSignals) {
-                if (!expectedCallingFunctions.get(index).equals(signal)) {
-                    throw new RuntimeException();
-                }
-                index++;
+        int index = 0;
+        for (String signal : observedSignals) {
+            if (!expectedCallingFunctions.get(index).equals(signal)) {
+                throw new RuntimeException();
             }
-        });
+            index++;
+        }
     }
 
     @Test
@@ -94,7 +111,7 @@ public class ArrayPublisherTest {
             }
         });
 
-        Assertions.assertTrue(collected.isEmpty());
+        Assert.assertTrue(collected.isEmpty());
 
         subscriptions[0].request(1);
         org.assertj.core.api.Assertions.assertThat(collected).containsExactly(0L);
@@ -139,7 +156,7 @@ public class ArrayPublisherTest {
         });
 
         latch.await(1, TimeUnit.SECONDS);
-        org.assertj.core.api.Assertions.assertThat(error).isInstanceOf(NullPointerException.class);
+        org.assertj.core.api.Assertions.assertThat(error.get()).isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -181,6 +198,40 @@ public class ArrayPublisherTest {
         org.assertj.core.api.Assertions.assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
 
         org.assertj.core.api.Assertions.assertThat(collected).containsExactly(array);
+    }
+
+    @Test
+    public void shouldBePossibleToCancelSubscription() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        ArrayList<Long> collected = new ArrayList<>();
+        long toRequest = 1000L;
+        Long[] arr = generate(toRequest);
+        ArrayPublisher<Long> publisher = new ArrayPublisher<>(arr);
+        publisher.subscribe(new Subscriber<Long>() {
+            @Override
+            public void onSubscribe(Subscription s) {
+                s.cancel();
+                s.request(toRequest);
+            }
+
+            @Override
+            public void onNext(Long aLong) {
+                collected.add(aLong);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+            }
+
+            @Override
+            public void onComplete() {
+                latch.countDown();
+            }
+        });
+
+        org.assertj.core.api.Assertions.assertThat(latch.await(5, TimeUnit.SECONDS)).isFalse();
+        org.assertj.core.api.Assertions.assertThat(collected).isEmpty();
     }
 
     static Long[] generate(long num) {
