@@ -11,6 +11,7 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.LongStream;
@@ -232,6 +233,87 @@ public class ArrayPublisherTest extends PublisherVerification<Long> {
 
         org.assertj.core.api.Assertions.assertThat(latch.await(5, TimeUnit.SECONDS)).isFalse();
         org.assertj.core.api.Assertions.assertThat(collected).isEmpty();
+    }
+
+    @Test
+    public void test_multi_threads_request_then_states_of_publisher_should_thread_safe_emit_elements_to_subscriber_safely() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        ArrayList<Long> collected = new ArrayList<>();
+        int toRequest = 10000;
+        Long[] arr = generate(toRequest);
+        ArrayPublisher<Long> publisher = new ArrayPublisher<>(arr);
+
+        publisher.subscribe(new Subscriber<>() {
+
+            Subscription s;
+
+            @Override
+            public void onSubscribe(Subscription s) {
+                this.s = s;
+                for (int i = 0; i < toRequest; i++) {
+                    ForkJoinPool.commonPool().execute(() -> {
+                        s.request(1);
+                    });
+                }
+            }
+
+            @Override
+            public void onNext(Long aLong) {
+                collected.add(aLong);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+            }
+
+            @Override
+            public void onComplete() {
+                latch.countDown();
+            }
+        });
+
+        latch.await(1, TimeUnit.SECONDS);
+        org.assertj.core.api.Assertions.assertThat(collected).hasSize(toRequest).containsExactly(arr);
+    }
+
+    @Test
+    public void test_case_requested_amout_is_could_overflow_publisher_should_handle_it_gracefully_as_unbounded_amount() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        ArrayList<Long> collected = new ArrayList<>();
+        int toRequest = 10000;
+        Long[] arr = generate(toRequest);
+        ArrayPublisher<Long> publisher = new ArrayPublisher<>(arr);
+
+        publisher.subscribe(new Subscriber<>() {
+
+            Subscription s;
+
+            @Override
+            public void onSubscribe(Subscription s) {
+                this.s = s;
+                s.request(Integer.MAX_VALUE);
+            }
+
+            @Override
+            public void onNext(Long aLong) {
+                collected.add(aLong);
+                s.request(Long.MAX_VALUE);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+            }
+
+            @Override
+            public void onComplete() {
+                latch.countDown();
+            }
+        });
+
+        latch.await(1, TimeUnit.SECONDS);
+        org.assertj.core.api.Assertions.assertThat(collected).hasSize(toRequest).containsExactly(arr);
     }
 
     static Long[] generate(long num) {

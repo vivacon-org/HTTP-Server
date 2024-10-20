@@ -24,46 +24,61 @@ public class ArrayPublisher<T> implements Publisher<T> {
             AtomicBoolean cancelled = new AtomicBoolean(false);
 
             @Override
-            public void request(long n) {
-                if (n <= 0 && !cancelled.get()) {
+            public void request(long newRequested) {
+                if (newRequested <= 0 && !cancelled.get()) {
                     cancel();
-                    subscriber.onError(new IllegalArgumentException("Request must be greater than 0, but it was " + n));
+                    subscriber.onError(new IllegalArgumentException("Request must be greater than 0, but it was " + newRequested));
                     return;
                 }
 
-                long previousRequested = requested.getAndAccumulate(n, Long::sum);
+                long previousRequested;
+                do {
+                    previousRequested = requested.get();
+
+                    if (previousRequested == Long.MAX_VALUE) {
+                        return;
+                    }
+
+                    newRequested = previousRequested + newRequested;
+
+                    if (newRequested <= 0) {
+                        newRequested = Long.MAX_VALUE;
+                    }
+                } while (!requested.compareAndSet(previousRequested, newRequested));
+
                 if (previousRequested == 0) {
-                    emitItems();
+                    try {
+                        emitItems();
+                    } catch (Exception ex) {
+                        subscriber.onError(ex);
+                    }
                 }
             }
 
             private void emitItems() {
-                try {
-                    while (requested.get() > 0) {
 
-                        if (cancelled.get()) {
-                            return;
-                        }
+                while (requested.get() > 0) {
 
-                        int currentIndex = index.getAndIncrement();
-
-                        if (currentIndex >= source.length) {
-                            subscriber.onComplete();
-                            return;
-                        }
-
-                        T element = source[currentIndex];
-                        if (element == null) {
-                            subscriber.onError(new NullPointerException());
-                            return;
-                        }
-
-                        subscriber.onNext(element);
-
-                        requested.decrementAndGet();
+                    if (cancelled.get()) {
+                        return;
                     }
-                } catch (Exception ex) {
-                    subscriber.onError(ex);
+
+                    int currentIndex = index.getAndIncrement();
+
+                    if (currentIndex >= source.length) {
+                        subscriber.onComplete();
+                        return;
+                    }
+
+                    T element = source[currentIndex];
+                    if (element == null) {
+                        subscriber.onError(new NullPointerException());
+                        return;
+                    }
+
+                    subscriber.onNext(element);
+
+                    requested.decrementAndGet();
                 }
             }
 
