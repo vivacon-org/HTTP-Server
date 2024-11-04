@@ -278,7 +278,7 @@ public class ArrayPublisherTest extends PublisherVerification<Long> {
     }
 
     @Test
-    public void test_case_requested_amout_is_could_overflow_publisher_should_handle_it_gracefully_as_unbounded_amount() throws InterruptedException {
+    public void test_case_requested_amount_is_could_overflow_publisher_should_handle_it_gracefully_as_unbounded_amount() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         ArrayList<Long> collected = new ArrayList<>();
         int toRequest = 10000;

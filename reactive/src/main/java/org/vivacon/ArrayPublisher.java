@@ -1,13 +1,12 @@
 package org.vivacon;
 
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ArrayPublisher<T> implements Publisher<T> {
+public class ArrayPublisher<T> extends Flow<T> {
 
     private final T[] source;
 
