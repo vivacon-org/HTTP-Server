@@ -1,0 +1,43 @@
+//The event occurs:
+//
+//On Monday, Wednesday, or Friday during 09:00 AM - 12:00 PM.
+//Only on the 15th or 28th of January, April, July, and October.
+//
+//The event is excluded:
+//If it falls on a Sunday or on December 25, 2024, or January 1, 2025.
+{
+  "type": "union",
+  "rules": [
+    {
+      "type": "intersection",
+      "rules": [
+        {
+          "type": "weekly",
+          "days": [1, 3, 5],
+          "time_range": {
+            "start": "09:00",
+            "end": "12:00"
+          }
+        },
+        {
+          "type": "monthly",
+          "days": [15, 28],
+          "months": [1, 4, 7, 10]
+        }
+      ]
+    },
+    {
+      "type": "exclusion",
+      "rules": [
+        {
+          "type": "yearly",
+          "dates": ["2024-12-25", "2025-01-01"]
+        },
+        {
+          "type": "weekly",
+          "days": [7]
+        }
+      ]
+    }
+  ]
+}
